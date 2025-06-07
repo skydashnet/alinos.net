@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Registrasi</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a1b9a 0%, #311b92 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        /* .login-container jadi .register-container */
+        .register-container {
+            background-color: #ffffff; padding: 30px 35px; border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1); width: 100%; max-width: 420px; text-align: center;
+        }
+        .register-container h2 { color: #4a148c; margin-bottom: 20px; font-size: 2em; }
+        .form-group label { color: #5e35b1; }
+        .action-button button, .register-button button { /* Tombol umum */
+            background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+            color: white; border: none; padding: 12px 20px; border-radius: 6px;
+            font-size: 1em; font-weight: 500; cursor: pointer; width: 100%;
+            transition: background-color 0.3s ease; margin-top:10px;
+        }
+        .action-button button:hover, .register-button button:hover { background: linear-gradient(135deg, #673ab7 0%, #4a148c 100%); }
+        #otpVerificationSection { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .message-area { margin-top: 15px; font-size: 0.9em; }
+        .login-link { margin-top: 20px; font-size: 0.9em; }
+        .login-link a { color: #5e35b1; text-decoration: none; font-weight: 600;}
+        .login-link a:hover { text-decoration: underline; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #5e35b1; font-weight: 600; font-size: 0.95em; }
+        .form-group input[type="text"], .form-group input[type="password"], .form-group input[type="email"], .form-group input[type="tel"] 
+        {
+            width: 100%; padding: 12px 15px; border: 1px solid #d1c4e9;
+            border-radius: 6px; font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="text"]:focus, .form-group input[type="password"]:focus, .form-group input[type="email"]:focus, .form-group input[type="tel"]:focus {
+            border-color: #7e57c2;
+            box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+            outline: none;
+        }
+        .form-group p {
+            text-align: center;
+        }
+        .login-button { text-align: center; margin-top: 10px; }
+        .login-button button[type="submit"] {
+            background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+            color: white; border: none; padding: 12px 25px; border-radius: 6px;
+            font-size: 1.1em; font-weight: 600; cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            width: 100%;
+        }
+        .login-button button[type="submit"]:hover { background: linear-gradient(135deg, #673ab7 0%, #4a148c 100%); }
+        .login-button button[type="submit"]:active { transform: scale(0.98); }
+        footer { position: absolute; bottom: 20px; width: 100%; text-align: center; color: rgba(255, 255, 255, 0.8); font-size: 0.9em; }
+        footer p { margin: 0; }
+        form#loginForm br { display: none; }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Registrasi Akun</h2>
+        <form id="initialRegisterForm">
+            <div class="form-group">
+                <label for="regFullName">Nama Lengkap:</label>
+                <input type="text" id="regFullName" name="fullName" required>
+            </div>
+            <div class="form-group">
+                <label for="regUsername">Username:</label>
+                <input type="text" id="regUsername" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="regWhatsappNumber">Nomor WhatsApp (08xxxx):</label>
+                <input type="tel" id="regWhatsappNumber" name="whatsappNumber" placeholder="Contoh: 08123456789" required>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="regConfirmPassword">Konfirmasi Password:</label>
+                <input type="password" id="regConfirmPassword" name="confirmPassword" required>
+            </div>
+            <div class="action-button">
+                <button type="submit" id="requestOtpBtn">Dapatkan Kode OTP</button>
+            </div>
+        </form>
+
+        <div id="otpVerificationSection">
+            <h3>Verifikasi OTP</h3>
+            <p>Kode OTP telah dikirim ke nomor WhatsApp Anda. Silakan masukkan di bawah ini.</p>
+            <form id="otpVerifyForm">
+                <div class="form-group">
+                    <label for="otpCode" style="align-items: center;">Kode OTP:</label>
+                    <input type="text" id="otpCode" name="otpCode" maxlength="6" required>
+                </div>
+                <div class="register-button">
+                    <button type="submit" id="completeRegisterBtn">Verifikasi & Daftar</button>
+                </div>
+            </form>
+        </div>
+        <div id="registerMessage" class="message-area"></div>
+        <div class="login-link">
+            Sudah punya akun? <a href="login.html">Login di sini</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialRegisterForm = document.getElementById('initialRegisterForm');
+            const otpVerificationSection = document.getElementById('otpVerificationSection');
+            const otpVerifyForm = document.getElementById('otpVerifyForm');
+            const requestOtpBtn = document.getElementById('requestOtpBtn');
+            const completeRegisterBtn = document.getElementById('completeRegisterBtn');
+            const registerMessage = document.getElementById('registerMessage');
+
+            let formDataStore = {}; // Untuk menyimpan data form awal
+
+            if (initialRegisterForm) {
+                initialRegisterForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    requestOtpBtn.disabled = true;
+                    requestOtpBtn.textContent = 'Mengirim OTP...';
+                    registerMessage.textContent = '';
+
+                    const fullName = document.getElementById('regFullName').value;
+                    const username = document.getElementById('regUsername').value;
+                    const email = document.getElementById('regEmail').value;
+                    const whatsappNumber = document.getElementById('regWhatsappNumber').value;
+                    const password = document.getElementById('regPassword').value;
+                    const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+                    if (password !== confirmPassword) {
+                        Swal.fire('Error', 'Password dan konfirmasi password tidak cocok!', 'error', {heightAuto:false});
+                        requestOtpBtn.disabled = false;
+                        requestOtpBtn.textContent = 'Dapatkan Kode OTP';
+                        return;
+                    }
+
+                    formDataStore = { fullName, username, email, whatsappNumber, password };
+
+                    try {
+                        const response = await fetch('/api/auth/register/request-otp', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ fullName, username, email, whatsappNumber, password }) // Kirim password untuk disimpan sementara jika diperlukan
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            Swal.fire('Sukses', data.message, 'success', {heightAuto:false});
+                            initialRegisterForm.style.display = 'none'; // Sembunyikan form awal
+                            otpVerificationSection.style.display = 'block'; // Tampilkan form OTP
+                        } else {
+                            Swal.fire('Gagal', data.message || 'Gagal mengirim OTP.', 'error', {heightAuto:false});
+                            requestOtpBtn.disabled = false;
+                            requestOtpBtn.textContent = 'Dapatkan Kode OTP';
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', 'Tidak bisa terhubung ke server. Coba lagi nanti.', 'error', {heightAuto:false});
+                        requestOtpBtn.disabled = false;
+                        requestOtpBtn.textContent = 'Dapatkan Kode OTP';
+                    }
+                });
+            }
+
+            if (otpVerifyForm) {
+                otpVerifyForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    completeRegisterBtn.disabled = true;
+                    completeRegisterBtn.textContent = 'Memverifikasi...';
+                    registerMessage.textContent = '';
+
+                    const otp = document.getElementById('otpCode').value;
+                    const payload = { ...formDataStore, otp };
+
+                    try {
+                        const response = await fetch('/api/auth/register/complete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            await Swal.fire({
+                                icon: 'success', title: 'Registrasi Berhasil!',
+                                text: data.message + ' Anda akan diarahkan ke halaman login.',
+                                timer: 3000, showConfirmButton: false, timerProgressBar: true, heightAuto:false
+                            });
+                            window.location.href = 'login.html';
+                        } else {
+                            Swal.fire('Gagal Verifikasi', data.message || 'OTP salah atau terjadi kesalahan.', 'error', {heightAuto:false});
+                            completeRegisterBtn.disabled = false;
+                            completeRegisterBtn.textContent = 'Verifikasi & Daftar';
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', 'Tidak bisa terhubung ke server. Coba lagi nanti.', 'error', {heightAuto:false});
+                        completeRegisterBtn.disabled = false;
+                        completeRegisterBtn.textContent = 'Verifikasi & Daftar';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

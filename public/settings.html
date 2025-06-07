@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Pengaturan Akun</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            scrollbar-gutter: stable;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body.swal2-shown, body.swal2-height-auto, body.swal2-iosfix {
+            overflow: hidden !important;
+            padding-right: 0 !important;
+        }
+
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .site-header .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo-title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+
+        .site-title h1 {
+            font-size: 1.8em;
+            color: #4a148c;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .site-title h2 {
+            font-size: 0.95em;
+            color: #555555;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover {
+            background-color: #5e35b1;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 900;
+        }
+
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .sidebar-toggle-button svg {
+            display: block;
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul {
+            list-style-type: none;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            background-color: transparent;
+            font-weight: normal;
+        }
+        .sidebar-nav li a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+        .sidebar-nav li a.active {
+            background-color: #7e57c2;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .nav-icon {
+            margin-right: 15px;
+            font-size: 1.3em;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: margin 0.3s ease;
+        }
+        .nav-text {
+            opacity: 1;
+            transition: opacity 0.15s 0.1s ease;
+        }
+
+        .sidebar.sidebar-minimized {
+            width: 70px;
+        }
+        .sidebar.sidebar-minimized .nav-text {
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+        }
+        .sidebar.sidebar-minimized .nav-icon {
+            margin-right: 0;
+        }
+        .sidebar.sidebar-minimized .sidebar-header {
+            justify-content: center;
+            padding: 15px 0;
+        }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg {
+            transform: rotate(180deg);
+        }
+        .sidebar.sidebar-minimized .site-footer-sidebar {
+            display: none;
+        }
+
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .main-content-wrapper { flex-grow: 1; background-color: #f0f2f5; overflow-y: auto; padding: 25px; }
+        .page-content-container { display: flex; flex-direction: column; gap: 25px; }
+        .content-section { background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.07); margin-bottom: 25px; }
+        .content-section:last-child { margin-bottom: 0; }
+        .content-section h2 { color: #4a148c; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #ab47bc; font-size: 1.5em;}
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #5e35b1; font-weight: 600; font-size: 0.95em; }
+        .form-group input[type="text"], .form-group input[type="email"], .form-group input[type="tel"], .form-group input[type="password"] {
+            width: 100%; padding: 12px 15px; border: 1px solid #d1c4e9; border-radius: 6px; font-size: 1em; color: #333; background-color: #fff; transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input:focus { border-color: #7e57c2; box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.25); outline: none; }
+        .action-button { background-color: #673ab7; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease; margin-top:10px;}
+        .action-button:hover { background-color: #512da8; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            body.sidebar-mobile-active .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px; }
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px; }
+            .site-title h1 { font-size: 1.2em; } .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+            .main-content-wrapper { padding: 15px; }
+            .content-section { padding: 15px; }
+            .content-section h2 {font-size: 1.3em;}
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title"><h1>ALINOS.NET</h1><h2>Dashboard Monitor</h2></div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path></svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html" class="active"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="page-content-container">
+                <section class="content-section">
+                    <h2>Pengaturan Akun Pengguna</h2>
+                    <form id="accountDetailsForm">
+                        <div class="form-group">
+                            <label for="username">Username (Tidak dapat diubah):</label>
+                            <input type="text" id="username" name="username" readonly disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="fullName">Nama Lengkap:</label>
+                            <input type="text" id="fullName" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="whatsappNumber">Nomor WhatsApp (Format: 08xxxx):</label>
+                            <input type="tel" id="whatsappNumber" name="whatsappNumber" placeholder="Contoh: 081234567890" pattern="08[0-9]{8,12}">
+                        </div>
+                        <button type="submit" class="action-button">Simpan Perubahan Info</button>
+                    </form>
+                </section>
+
+                <section class="content-section">
+                    <h2>Ubah Password</h2>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label for="oldPassword">Password Lama:</label>
+                            <input type="password" id="oldPassword" name="oldPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Password Baru:</label>
+                            <input type="password" id="newPassword" name="newPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Konfirmasi Password Baru:</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                        </div>
+                        <button type="submit" class="action-button">Ubah Password</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+    <script>
+        // settings_script.js (atau tempel di sini jika mau inline)
+        const authTokenSettingsPage = localStorage.getItem('authToken');
+        if (!authTokenSettingsPage) {
+            alert('Anda harus login terlebih dahulu!');
+            window.location.href = 'login.html';
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+                const fetchDataWithAuth = async (endpoint, options = {}) => {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) { localStorage.removeItem('authToken'); alert('Sesi tidak ditemukan...'); window.location.href = 'login.html'; return null; }
+                    const fullUrl = `/api${endpoint}`;
+                    try {
+                        const defaultHeaders = { 'Authorization': `Bearer ${token}` };
+                        if (options.method === 'POST' || options.method === 'PUT') defaultHeaders['Content-Type'] = 'application/json';
+                        const fetchOptions = { headers: defaultHeaders, ...options };
+                        const response = await fetch(fullUrl, fetchOptions);
+                        if (response.status === 401 || response.status === 403) { localStorage.removeItem('authToken'); alert('Sesi berakhir...'); window.location.href = 'login.html'; return null; }
+                        if (response.status === 204 && (options.method === 'PUT' || options.method === 'DELETE')) return { success: true };
+                        if (!response.ok) {
+                            const errorBody = await response.text(); let errorJsonMessage = errorBody;
+                            try { const parsedError = JSON.parse(errorBody); errorJsonMessage = parsedError.message || errorBody; } catch (e) {}
+                            Swal.fire({title:'Error Fetch', text:`Gagal (${response.status}): ${errorJsonMessage}`, icon:'error', heightAuto: false}); return null;
+                        }
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) return await response.json();
+                        return { success: true, data: await response.text() }; 
+                    } catch (error) { Swal.fire({title:'Error Jaringan', text: error.message || 'Tidak bisa ke server.', icon:'error', heightAuto: false}); return null; }
+                };
+
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', () => {
+                        localStorage.removeItem('authToken');
+                        Swal.fire({
+                            icon: 'success', title: 'Logout Berhasil!', text: 'Anda akan diarahkan ke halaman login.',
+                            timer: 2000, showConfirmButton: false, timerProgressBar: true, heightAuto: false,
+                            didClose: () => { window.location.href = 'login.html'; }
+                        });
+                    });
+                }
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+                const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+                const sidebarOverlay = document.getElementById('sidebarOverlay');
+                function toggleSidebar() { 
+                    if (sidebar) {
+                        sidebar.classList.toggle('sidebar-minimized');
+                        if (window.innerWidth <= 768) { 
+                            document.body.classList.toggle('sidebar-mobile-active', sidebar.classList.contains('sidebar-minimized'));
+                        }
+                    }
+                }
+                if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+                if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+                if (sidebarOverlay && sidebar) {
+                    sidebarOverlay.addEventListener('click', () => {
+                        sidebar.classList.remove('sidebar-minimized');
+                        if (window.innerWidth <= 768) {
+                            document.body.classList.remove('sidebar-mobile-active');
+                        }
+                    });
+                }
+                const yearSpanSidebar = document.getElementById('currentYearSidebar');
+                if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+
+                function setActiveNav() {
+                    const currentPath = window.location.pathname;
+                    const navLinks = document.querySelectorAll('.sidebar-nav ul li a');
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        const linkHref = link.getAttribute('href');
+                        const currentFile = currentPath.substring(currentPath.lastIndexOf('/') + 1) || 'dashboard.html';
+                        const linkFile = linkHref ? linkHref.substring(linkHref.lastIndexOf('/') + 1) : "";
+                        if (linkFile && currentFile === linkFile) { link.classList.add('active'); }
+                        else if ((currentPath === '/' || currentPath.endsWith('/index.html')) && (linkHref === '/dashboard.html' || linkHref === 'dashboard.html' || linkHref === './' || linkHref === '/')) {
+                           const homeLink = Array.from(navLinks).find(l => l.getAttribute('href').includes('dashboard.html') || l.getAttribute('href') === '/');
+                           if(homeLink) homeLink.classList.add('active');
+                        }
+                    });
+                }
+
+                const accountDetailsForm = document.getElementById('accountDetailsForm');
+                const usernameInput = document.getElementById('username');
+                const fullNameInput = document.getElementById('fullName');
+                const emailInput = document.getElementById('email');
+                const whatsappNumberInput = document.getElementById('whatsappNumber');
+
+                const changePasswordForm = document.getElementById('changePasswordForm');
+                const oldPasswordInput = document.getElementById('oldPassword');
+                const newPasswordInput = document.getElementById('newPassword');
+                const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+
+                async function loadAccountDetails() {
+                    const userData = await fetchDataWithAuth('/settings/account');
+                    if (userData) {
+                        if(usernameInput) usernameInput.value = userData.username || '';
+                        if(fullNameInput) fullNameInput.value = userData.full_name || '';
+                        if(emailInput) emailInput.value = userData.email || '';
+                        if(whatsappNumberInput) {
+                            let displayWa = userData.whatsapp_number || '';
+                            if (displayWa.includes('@')) displayWa = displayWa.split('@')[0];
+                            if (displayWa.startsWith('62')) displayWa = '0' + displayWa.substring(2);
+                            whatsappNumberInput.value = displayWa;
+                        }
+                    } else {
+                        Swal.fire('Error', 'Gagal memuat detail akun Anda.', 'error', {heightAuto:false});
+                    }
+                }
+
+                if (accountDetailsForm) {
+                    accountDetailsForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const payload = {
+                            fullName: fullNameInput.value.trim(),
+                            email: emailInput.value.trim(),
+                            whatsappNumber: whatsappNumberInput.value.trim()
+                        };
+                        if (!payload.fullName || !payload.email) {
+                             Swal.fire('Error', 'Nama Lengkap dan Email tidak boleh kosong.', 'warning', {heightAuto:false});
+                             return;
+                        }
+                        if (payload.whatsappNumber && !/^08[0-9]{8,12}$/.test(payload.whatsappNumber)) {
+                            Swal.fire('Format Nomor Salah', 'Masukkan nomor WhatsApp dengan format 08xxxx (10-14 digit).', 'warning', {heightAuto:false});
+                            return;
+                        }
+
+                        const result = await fetchDataWithAuth('/settings/account', { 
+                            method: 'PUT',
+                            body: JSON.stringify(payload)
+                        });
+                        if (result && result.user) {
+                            Swal.fire('Berhasil!', 'Detail akun berhasil diperbarui.', 'success', {heightAuto:false});
+                            if(fullNameInput) fullNameInput.value = result.user.full_name || '';
+                            if(emailInput) emailInput.value = result.user.email || '';
+                            if(whatsappNumberInput) {
+                                let displayWa = result.user.whatsapp_number || '';
+                                if (displayWa.includes('@')) displayWa = displayWa.split('@')[0];
+                                if (displayWa.startsWith('62')) displayWa = '0' + displayWa.substring(2);
+                                whatsappNumberInput.value = displayWa;
+                            }
+                        } else {
+                        }
+                    });
+                }
+
+                if (changePasswordForm) {
+                    changePasswordForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const oldPassword = oldPasswordInput.value;
+                        const newPassword = newPasswordInput.value;
+                        const confirmNewPassword = confirmNewPasswordInput.value;
+
+                        if (!oldPassword || !newPassword || !confirmNewPassword) {
+                            Swal.fire('Input Tidak Lengkap', 'Semua field password harus diisi.', 'warning', {heightAuto:false});
+                            return;
+                        }
+                        if (newPassword.length < 6) {
+                             Swal.fire('Password Lemah', 'Password baru minimal 6 karakter.', 'warning', {heightAuto:false});
+                            return;
+                        }
+                        if (newPassword !== confirmNewPassword) {
+                            Swal.fire('Password Tidak Cocok', 'Password baru dan konfirmasi password tidak sama.', 'error', {heightAuto:false});
+                            return;
+                        }
+
+                        const result = await fetchDataWithAuth('/settings/change-password', {
+                            method: 'PUT',
+                            body: JSON.stringify({ oldPassword, newPassword, confirmNewPassword })
+                        });
+
+                        if (result && result.message.includes('berhasil')) { 
+                            Swal.fire('Berhasil!', result.message, 'success', {heightAuto:false});
+                            changePasswordForm.reset();
+                        } else {
+                        }
+                    });
+                }
+                function initializeSettingsPage() {
+                    console.log("[SETTINGS_PAGE] Menginisialisasi Halaman Pengaturan Akun...");
+                    setActiveNav();
+                    loadAccountDetails();
+                }
+
+                initializeSettingsPage();
+            });
+        }
+    </script>
+</body>
+</html>

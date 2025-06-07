@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Manajemen Keuangan</title>
+    <meta name="description" content="Manajemen Pemasukan dan Pengeluaran ALINOS.NET">
+    <meta name="author" content="Skydash.NET">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .site-header .header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-title-container { display: flex; align-items: center; }
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+        .site-title h1 { font-size: 1.8em; color: #4a148c; margin: 0; line-height: 1.1; }
+        .site-title h2 { font-size: 0.95em; color: #555; margin: 0; font-weight: 400; }
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover { background-color: #5e35b1; }
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1; 
+            overflow: hidden; 
+        }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex; 
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%; 
+            flex-shrink: 0; 
+        }
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0; 
+        }
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover { background: rgba(255,255,255,0.2); }
+        .sidebar-toggle-button svg { display: block; width: 20px; height: 20px; }
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul { list-style-type: none; }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .mobile-menu-button {
+            display: none; 
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+        .sidebar-nav li a:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
+        .nav-icon { margin-right: 15px; font-size: 1.3em; width: 24px; text-align: center; flex-shrink: 0; transition: margin 0.3s ease; }
+        .nav-text { opacity: 1; transition: opacity 0.15s 0.1s ease; } 
+        .sidebar.sidebar-minimized { width: 70px; }
+        .sidebar.sidebar-minimized .nav-text { opacity: 0; pointer-events: none; width: 0; }
+        .sidebar.sidebar-minimized .nav-icon { margin-right: 0; }
+        .sidebar.sidebar-minimized .sidebar-header { justify-content: center; padding: 15px 0; }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(180deg); }
+        .sidebar.sidebar-minimized .site-footer-sidebar { display: none; }
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0; 
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .main-content-wrapper {
+            flex-grow: 1;
+            background-color: #f0f2f5;
+            overflow-y: auto; 
+            padding: 25px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-area-flex { display: flex; gap: 25px; }
+        .main-content { flex: 3; display: flex; flex-direction: column; gap: 25px; min-width: 0; }
+        .main-content h2 { color: #4a148c; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ab47bc; }
+        .traffic-charts .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .chart-container {
+            background-color: #ffffff;
+            padding: 15px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            text-align: center;
+            height: 300px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .chart-container canvas { max-width: 100%; display: block; flex-grow: 1; min-height: 0; }
+        .chart-container p { margin-top: 10px; font-weight: 600; color: #4a4a4a; font-size: 0.9em; flex-shrink: 0; }
+        .right-panel { flex: 1; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.07); height: fit-content; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .right-panel-section { background-color: #f9f9f9; padding: 15px; border-radius: 6px; }
+        .right-panel-section h2 { color: #4a148c; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #ce93d8; font-size: 1.1em; }
+        .info-item { margin-bottom: 12px; font-size: 0.95em; line-height: 1.5; }
+        .info-item strong { color: #311b92; display: block; margin-bottom: 3px; font-weight: 600; }
+        .info-item span, .info-item p#deviceUptime { color: #673ab7; font-size: 1.1em; font-weight: bold; word-break: break-all; }
+
+        @media (max-width: 992px) {
+            .content-area-flex { flex-direction: column; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 280px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end; padding: 15px 10px 15px 15px;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            .sidebar.sidebar-minimized + .main-content-wrapper + .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px;}
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px;}
+            .site-title h1 { font-size: 1.2em; }
+            .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+        }
+        .management-page-container {
+            display: flex;
+            gap: 25px;
+        }
+        .expense-list li .expense-amount-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px; 
+        }
+        .expense-list li .action-button-edit.expense-edit-btn {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        .income-section {
+            flex: 3; 
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
+        .income-section h2, .financial-summary-panels h3 {
+            color: #4a148c;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ab47bc;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 60vh; 
+            overflow-y: auto;
+            position: relative;
+            margin-top: 10px;
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        table.data-table th, table.data-table td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.data-table th {
+            background-color: #f4f0f8;
+            color: #4a148c;
+            font-weight: 600;
+            position: sticky; top: 0; z-index: 1;
+        }
+        table.data-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        table.data-table tbody tr:hover { background-color: #efefef; }
+        .action-button-edit {
+            background-color: #7e57c2; color: white; border: none;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer;
+            font-size: 0.85em; transition: background-color 0.3s ease;
+        }
+        .action-button-edit:hover { background-color: #5e35b1; }
+
+        .financial-summary-panels {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .summary-box, .expense-details-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
+        .summary-item { margin-bottom: 15px; }
+        .summary-item strong { color: #5e35b1; display: block; font-size: 1em; margin-bottom: 5px; }
+        .summary-item span { font-weight: bold; color: #333; font-size: 1.4em; }
+        
+        .expense-list { list-style-type: none; padding-left: 0; max-height: 200px; overflow-y: auto; font-size: 0.9em; }
+        .expense-list li { padding: 6px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; }
+        .expense-list li:last-child { border-bottom: none; }
+        .expense-list .amount { font-weight: bold; color: #c62828; }
+
+        .add-expense-button {
+            display: block; width: 100%;
+            background-color: #4caf50;
+            color: white; border: none; padding: 10px 15px; border-radius: 6px;
+            font-size: 1em; font-weight: 600; cursor: pointer;
+            transition: background-color 0.3s ease; margin-top: 15px;
+        }
+        .add-expense-button:hover { background-color: #388e3c; }
+        @media (max-width: 1024px) {
+            .management-page-container { flex-direction: column; }
+            .income-section, .financial-summary-panels { flex: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title"><h1>ALINOS.NET</h1><h2>Dashboard Monitor</h2></div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path></svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html" class="active"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html" class="active"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="management-page-container">
+                <section class="income-section">
+                    <h2>Manajemen Data</h2>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="incomeTable">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th class="sortable-header" data-sort-by="name">Nama Pelanggan</th>
+                                    <th class="sortable-header" data-sort-by="nominal">Nominal (Rp)</th>
+                                    <th class="sortable-header" data-sort-by="tanggal_tagihan">Tgl Tagihan</th>
+                                    <th class="sortable-header" data-sort-by="comment">Komentar</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incomeTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <aside class="financial-summary-panels">
+                    <div class="summary-box">
+                        <h3>Ringkasan Keuangan</h3>
+                        <div class="summary-item">
+                            <strong>Total Pemasukan:</strong>
+                            <span id="totalIncome">Rp 0</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Total Pengeluaran:</strong>
+                            <span id="totalExpense">Rp 0</span>
+                        </div>
+                         <div class="summary-item">
+                            <strong>Saldo:</strong>
+                            <span id="netBalance">Rp 0</span>
+                        </div>
+                    </div>
+                    <div class="expense-details-box">
+                        <h3>Detail Pengeluaran</h3>
+                        <ul class="expense-list" id="expenseList">
+                            </ul>
+                        <button class="add-expense-button" id="addExpenseBtn">Tambah Pengeluaran</button>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+    <script>
+    const authTokenManagementPage = localStorage.getItem('authToken');
+        if (!authTokenManagementPage) {
+            alert('Anda harus login terlebih dahulu!');
+            window.location.href = 'login.html';
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+        const backendPort = 3000;
+
+        let allIncomeCustomers = [];
+        let currentIncomeSortColumn = null;
+        let currentIncomeSortDirection = 'asc';
+        let allExpenses = [];
+        const incomeTableBody = document.getElementById('incomeTableBody');
+        const expenseListEl = document.getElementById('expenseList');
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalExpenseEl = document.getElementById('totalExpense');
+        const netBalanceEl = document.getElementById('netBalance');
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const fetchDataWithAuth = async (endpoint, options = {}) => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                localStorage.removeItem('authToken');
+                alert('Sesi tidak ditemukan. Silakan login kembali.');
+                window.location.href = 'login.html';
+                return null;
+            }
+            const fullUrl = `/api${endpoint}`;
+            const defaultHeaders = { 'Authorization': `Bearer ${token}` };
+            if (options.method === 'POST' || options.method === 'PUT') {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+            const fetchOptions = { headers: defaultHeaders, ...options };
+
+            try {
+                const response = await fetch(fullUrl, fetchOptions);
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                if (response.status === 204) return { success: true }; 
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status} - ${response.statusText}` }));
+                    console.error(`Error fetching ${fullUrl}: ${response.status}`, errorData);
+                    Swal.fire('Error', errorData.message || `Gagal mengambil data dari server.`, 'error',{heightAuto: false});
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Catch error fetching ${fullUrl}:`, error);
+                Swal.fire('Error', error.message || 'Tidak bisa terhubung ke server.', 'error',{heightAuto: false});
+                return null;
+            }
+        };
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount || 0);
+        }
+
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                Swal.fire({
+                    icon: 'success', title: 'Logout Berhasil!', text: 'Anda akan diarahkan ke halaman login.',
+                    timer: 2000, showConfirmButton: false, timerProgressBar: true, heightAuto: false,
+                    didClose: () => { window.location.href = 'login.html'; }
+                });
+            });
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        function toggleSidebar() { 
+        if (sidebar) sidebar.classList.toggle('sidebar-minimized'); }
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay && sidebar) {
+            sidebarOverlay.addEventListener('click', () => sidebar.classList.remove('sidebar-minimized'));
+        }
+        const yearSpanSidebar = document.getElementById('currentYearSidebar');
+        if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+
+        function setActiveNav() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-nav ul li a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const linkHref = link.getAttribute('href');
+                if (link.pathname === currentPath || linkHref === currentPath.substring(1) || (linkHref && currentPath.includes(linkHref) && linkHref !== '#')) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        function renderIncomeTable(customers) {
+            if (!incomeTableBody) return;
+            incomeTableBody.innerHTML = '';
+            if (!customers || customers.length === 0) {
+                incomeTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tidak ada data pelanggan.</td></tr>';
+                return;
+            }
+            customers.forEach((cust, index) => {
+                const row = incomeTableBody.insertRow();
+                row.insertCell().textContent = index + 1;
+                row.insertCell().textContent = cust.pppoe_username || cust.name || '-';
+                row.insertCell().textContent = formatCurrency(cust.nominal);
+                row.insertCell().textContent = cust.tanggal_tagihan ? new Date(cust.tanggal_tagihan + 'T00:00:00').toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'; // Tambah T00:00:00 untuk UTC
+                row.insertCell().textContent = cust.comment || '-';
+                const actionsCell = row.insertCell();
+                const editButton = document.createElement('button');
+                editButton.classList.add('action-button-edit');
+                editButton.textContent = 'Edit';
+                editButton.dataset.username = cust.pppoe_username || cust.name;
+                actionsCell.appendChild(editButton);
+            });
+        }
+
+        function updateIncomeSortIndicators(clickedHeaderElement) {
+            document.querySelectorAll('#incomeTable th.sortable-header').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            if (clickedHeaderElement) {
+                clickedHeaderElement.classList.add(currentIncomeSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        }
+
+        function sortIncomeData(columnKey) {
+            if (currentIncomeSortColumn === columnKey) {
+                currentIncomeSortDirection = currentIncomeSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentIncomeSortColumn = columnKey;
+                currentIncomeSortDirection = 'asc';
+            }
+            const sortedData = [...allIncomeCustomers].sort((a, b) => {
+                let valA = a[columnKey], valB = b[columnKey];
+                valA = valA === undefined || valA === null ? '' : valA;
+                valB = valB === undefined || valB === null ? '' : valB;
+                let comparison = 0;
+                if (columnKey === 'nominal') {
+                    valA = parseFloat(valA) || 0; valB = parseFloat(valB) || 0;
+                    comparison = valA - valB;
+                } else if (columnKey === 'tanggal_tagihan') {
+                    const dateA = valA ? new Date(valA + 'T00:00:00').getTime() : 0; 
+                    const dateB = valB ? new Date(valB + 'T00:00:00').getTime() : 0;
+                    comparison = dateA - dateB;
+                } else {
+                    valA = String(valA).toLowerCase(); valB = String(valB).toLowerCase();
+                    if (valA > valB) comparison = 1; else if (valA < valB) comparison = -1;
+                }
+                return currentIncomeSortDirection === 'asc' ? comparison : comparison * -1;
+            });
+            renderIncomeTable(sortedData);
+            const clickedHeaderElement = document.querySelector(`#incomeTable th[data-sort-by="${columnKey}"]`);
+            updateIncomeSortIndicators(clickedHeaderElement);
+        }
+
+        async function loadIncomeData() {
+            const data = await fetchDataWithAuth('/management/income-customers');
+            if (data && Array.isArray(data)) {
+                allIncomeCustomers = data;
+                renderIncomeTable(allIncomeCustomers);
+                calculateAndDisplaySummary();
+            } else {
+                renderIncomeTable([]);
+                calculateAndDisplaySummary();
+            }
+        }
+
+        async function handleEditIncome(customer) {
+            const { value: formValues } = await Swal.fire({
+                title: `Edit Data ${customer.pppoe_username || customer.name}`,
+                html:
+                    `<input id="swal-nominal" class="swal2-input" placeholder="Nominal (mis: 100000)" value="${customer.nominal || ''}" type="number">` +
+                    `<input type="date" id="swal-tanggal" class="swal2-input" value="${customer.tanggal_tagihan ? new Date(customer.tanggal_tagihan + 'T00:00:00').toISOString().split('T')[0] : ''}">` +
+                    `<textarea id="swal-comment" class="swal2-textarea" placeholder="Komentar...">${customer.comment || ''}</textarea>`,
+                focusConfirm: false,
+                preConfirm: () => ({
+                    nominal: document.getElementById('swal-nominal').value,
+                    tanggal_tagihan: document.getElementById('swal-tanggal').value,
+                    comment: document.getElementById('swal-comment').value
+                }),
+                showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal', heightAuto: false
+            });
+            if (formValues) {
+                const { nominal, tanggal_tagihan, comment } = formValues;
+                const username = customer.pppoe_username || customer.name;
+                const result = await fetchDataWithAuth(`/management/income-customers/${username}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ nominal: parseFloat(nominal) || 0, tanggal_tagihan: tanggal_tagihan || null, comment })
+                });
+                if (result && (result.data || result.success)) { // Cek data atau success
+                    Swal.fire({title:'Berhasil!', text:'Data berhasil diperbarui.', icon:'success', timer:1500, showConfirmButton: false, heightAuto:false});
+                    loadIncomeData();
+                }
+            }
+        }
+        if (incomeTableBody) {
+            incomeTableBody.addEventListener('click', function(event) {
+                if (event.target && event.target.classList.contains('action-button-edit')) {
+                    const username = event.target.dataset.username;
+                    const customerToEdit = allIncomeCustomers.find(cust => (cust.pppoe_username || cust.name) === username);
+                    if (customerToEdit) {
+                        handleEditIncome(customerToEdit);
+                    }
+                }
+            });
+        }
+        function renderExpenseList(expenses) {
+            if (!expenseListEl) return;
+            expenseListEl.innerHTML = '';
+            if (!expenses || expenses.length === 0) {
+                expenseListEl.innerHTML = '<li>Tidak ada data pengeluaran.</li>';
+                return;
+            }
+            expenses.forEach(exp => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="expense-info">${exp.description} (${new Date(exp.expense_date + 'T00:00:00').toLocaleDateString('id-ID')})</span>
+                    <span class="expense-amount-actions">
+                        <span class="amount">${formatCurrency(exp.amount)}</span>
+                        <button class="action-button-edit expense-edit-btn" data-expense-id="${exp.id}">Edit</button>
+                    </span>`;
+                expenseListEl.appendChild(li);
+            });
+        }
+
+        async function loadExpenseData() {
+            const data = await fetchDataWithAuth('/management/expenses');
+            if (data && Array.isArray(data)) {
+                allExpenses = data;
+                renderExpenseList(allExpenses);
+                calculateAndDisplaySummary();
+            } else {
+                renderExpenseList([]);
+                calculateAndDisplaySummary();
+            }
+        }
+
+        async function handleEditExpense(expenseId) {
+            const expenseToEdit = allExpenses.find(exp => exp.id == expenseId);
+            if (!expenseToEdit) { Swal.fire('Error', 'Data pengeluaran tidak ditemukan.', 'error', {heightAuto: false}); return; }
+            const { value: formValues } = await Swal.fire({
+                title: 'Edit Pengeluaran',
+                html:
+                    `<input type="date" id="swal-edit-exp-date" class="swal2-input" value="${expenseToEdit.expense_date ? new Date(expenseToEdit.expense_date + 'T00:00:00').toISOString().split('T')[0] : ''}">` +
+                    `<input id="swal-edit-exp-desc" class="swal2-input" placeholder="Deskripsi Pengeluaran" value="${expenseToEdit.description || ''}">` +
+                    `<input type="number" id="swal-edit-exp-amount" class="swal2-input" placeholder="Jumlah" value="${expenseToEdit.amount || ''}">`,
+                focusConfirm: false,
+                preConfirm: () => ({
+                    expense_date: document.getElementById('swal-edit-exp-date').value,
+                    description: document.getElementById('swal-edit-exp-desc').value,
+                    amount: document.getElementById('swal-edit-exp-amount').value
+                }),
+                showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal', heightAuto: false
+            });
+            if (formValues) {
+                const { description, amount, expense_date } = formValues;
+                if (!description || !amount || !expense_date) { Swal.fire('Error', 'Semua field harus diisi!', 'error', {heightAuto: false}); return; }
+                
+                const result = await fetchDataWithAuth(`/management/expenses/${expenseId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ description, amount: parseFloat(amount), expense_date })
+                });
+                if (result && result.data && result.data.id) {
+                    Swal.fire({title:'Berhasil!', text:'Data pengeluaran berhasil diperbarui.', icon:'success', timer:1500, showConfirmButton: false, heightAuto:false});
+                    loadExpenseData();
+                }
+            }
+        }
+        if (addExpenseBtn) {
+            addExpenseBtn.addEventListener('click', async () => {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Tambah Pengeluaran Baru',
+                    html:
+                        '<input type="date" id="swal-exp-date" class="swal2-input">' +
+                        '<input id="swal-exp-desc" class="swal2-input" placeholder="Deskripsi Pengeluaran">' +
+                        '<input type="number" id="swal-exp-amount" class="swal2-input" placeholder="Jumlah (mis: 50000)">',
+                    focusConfirm: false,
+                    preConfirm: () => ({
+                        expense_date: document.getElementById('swal-exp-date').value,
+                        description: document.getElementById('swal-exp-desc').value,
+                        amount: document.getElementById('swal-exp-amount').value
+                    }),
+                    showCancelButton: true, confirmButtonText: 'Tambah', cancelButtonText: 'Batal', heightAuto: false
+                });
+                if (formValues) {
+                    const { description, amount, expense_date } = formValues;
+                    if (!description || !amount || !expense_date) { Swal.fire('Error', 'Semua field harus diisi!', 'error',{heightAuto: false}); return; }
+                    
+                    const result = await fetchDataWithAuth('/management/expenses', {
+                        method: 'POST',
+                        body: JSON.stringify({ description, amount: parseFloat(amount), expense_date })
+                    });
+                    if (result && result.id) {
+                        Swal.fire({title:'Berhasil!', text:'Data pengeluaran berhasil ditambahkan.', icon:'success',timer:1500, showConfirmButton: false, heightAuto:false});
+                        loadExpenseData();
+                    }
+                }
+            });
+        }
+        if (expenseListEl) {
+            expenseListEl.addEventListener('click', function(event) {
+                if (event.target && event.target.classList.contains('expense-edit-btn')) {
+                    const expenseId = event.target.dataset.expenseId;
+                    if (expenseId) {
+                        handleEditExpense(expenseId);
+                    }
+                }
+            });
+        }
+        function calculateAndDisplaySummary() {
+            const totalIncome = allIncomeCustomers.reduce((sum, cust) => sum + (parseFloat(cust.nominal) || 0), 0);
+            const totalExpense = allExpenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+            const netBalance = totalIncome - totalExpense;
+
+            if (totalIncomeEl) totalIncomeEl.textContent = formatCurrency(totalIncome);
+            if (totalExpenseEl) totalExpenseEl.textContent = formatCurrency(totalExpense);
+            if (netBalanceEl) netBalanceEl.textContent = formatCurrency(netBalance);
+        }
+        function initializeManagementPage() {
+            console.log("Menginisialisasi Halaman Manajemen Keuangan...");
+            setActiveNav();
+            loadIncomeData().then(() => { 
+                 document.querySelectorAll('#incomeTable th.sortable-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        const columnKey = this.dataset.sortBy;
+                        if (columnKey) {
+                            sortIncomeData(columnKey);
+                        }
+                    });
+                });
+                updateIncomeSortIndicators(null);
+            });
+            loadExpenseData();
+        }
+
+        initializeManagementPage();
+    });
+}
+    </script>
+</body>
+</html>

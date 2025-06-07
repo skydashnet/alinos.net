@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Manajemen ODP/ODC</title>
+    <meta name="description" content="Manajemen ODP/ODC Jaringan ALINOS.NET">
+    <meta name="author" content="Skydash.NET">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .site-header .header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-title-container { display: flex; align-items: center; }
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+        .site-title h1 { font-size: 1.8em; color: #4a148c; margin: 0; line-height: 1.1; }
+        .site-title h2 { font-size: 0.95em; color: #555; margin: 0; font-weight: 400; }
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover { background-color: #5e35b1; }
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1; 
+            overflow: hidden; 
+        }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex; 
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%; 
+            flex-shrink: 0; 
+        }
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0; 
+        }
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover { background: rgba(255,255,255,0.2); }
+        .sidebar-toggle-button svg { display: block; width: 20px; height: 20px; }
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul { list-style-type: none; }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .mobile-menu-button {
+            display: none; 
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+        .sidebar-nav li a:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
+        .nav-icon { margin-right: 15px; font-size: 1.3em; width: 24px; text-align: center; flex-shrink: 0; transition: margin 0.3s ease; }
+        .nav-text { opacity: 1; transition: opacity 0.15s 0.1s ease; } 
+        .sidebar.sidebar-minimized { width: 70px; }
+        .sidebar.sidebar-minimized .nav-text { opacity: 0; pointer-events: none; width: 0; }
+        .sidebar.sidebar-minimized .nav-icon { margin-right: 0; }
+        .sidebar.sidebar-minimized .sidebar-header { justify-content: center; padding: 15px 0; }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(180deg); }
+        .sidebar.sidebar-minimized .site-footer-sidebar { display: none; }
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0; 
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .main-content-wrapper {
+            flex-grow: 1;
+            background-color: #f0f2f5;
+            overflow-y: auto; 
+            padding: 25px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-area-flex { display: flex; gap: 25px; }
+        .main-content { flex: 3; display: flex; flex-direction: column; gap: 25px; min-width: 0; }
+        .main-content h2 { color: #4a148c; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ab47bc; }
+        .traffic-charts .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .chart-container {
+            background-color: #ffffff;
+            padding: 15px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            text-align: center;
+            height: 300px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .chart-container canvas { max-width: 100%; display: block; flex-grow: 1; min-height: 0; }
+        .chart-container p { margin-top: 10px; font-weight: 600; color: #4a4a4a; font-size: 0.9em; flex-shrink: 0; }
+        .right-panel { flex: 1; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.07); height: fit-content; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .right-panel-section { background-color: #f9f9f9; padding: 15px; border-radius: 6px; }
+        .right-panel-section h2 { color: #4a148c; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #ce93d8; font-size: 1.1em; }
+        .info-item { margin-bottom: 12px; font-size: 0.95em; line-height: 1.5; }
+        .info-item strong { color: #311b92; display: block; margin-bottom: 3px; font-weight: 600; }
+        .info-item span, .info-item p#deviceUptime { color: #673ab7; font-size: 1.1em; font-weight: bold; word-break: break-all; }
+
+        @media (max-width: 992px) {
+            .content-area-flex { flex-direction: column; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 280px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end; padding: 15px 10px 15px 15px;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            .sidebar.sidebar-minimized + .main-content-wrapper + .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px;}
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px;}
+            .site-title h1 { font-size: 1.2em; }
+            .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+        }
+        .odp-odc-management-container {
+            display: flex;
+            gap: 25px;
+            height: calc(100% - 0px);
+        }
+
+        .odp-odc-input-panel {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            overflow-y: auto;
+            max-height: calc(100vh - 85px - 50px);
+        }
+        .odp-odc-input-panel h2, .odp-odc-input-panel h3 {
+            color: #4a148c;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ab47bc;
+        }
+
+        .map-panel {
+            flex: 3; 
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            position: relative; 
+        }
+        #odpMap {
+            width: 100%;
+            height: 100%; 
+            border-radius: 8px;
+        }
+        .awesome-marker i {
+            font-size: 16px; 
+            margin-top: 7px;
+        }
+        .form-group {
+            margin-bottom: 20px; 
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px; 
+            color: #5e35b1;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1c4e9;
+            border-radius: 6px;
+            font-size: 1em;
+            color: #333333;
+            background-color: #ffffff;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="password"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #7e57c2;
+            box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.25);
+            outline: none;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            line-height: 1.5; 
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #a0aec0;
+            opacity: 1; 
+        }
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px; 
+        }
+
+        .form-buttons button {
+            flex-grow: 1; 
+            padding: 12px 20px; 
+            font-size: 1em;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            border: none;
+        }
+
+        .form-buttons .action-button {
+            background-color: #673ab7;
+            color: white;
+        }
+        .form-buttons .action-button:hover {
+            background-color: #512da8;
+        }
+        .form-buttons .action-button:active {
+            transform: scale(0.98);
+        }
+        .form-buttons .button-cancel {
+            background-color: #9e9e9e; 
+            color: white;
+        }
+        .form-buttons .button-cancel:hover {
+            background-color: #757575; 
+        }
+        .form-buttons .button-cancel:active {
+            transform: scale(0.98);
+        }
+        #splitterInputContainer {
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+        }
+        #splitterInputContainer.visible { 
+            max-height: 200px;
+            opacity: 1;
+            margin-bottom: 20px; 
+        }
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .form-buttons button {
+            flex-grow: 1;
+        }
+        .button-cancel {
+            background-color: #757575; 
+        }
+        .button-cancel:hover {
+            background-color: #616161;
+        }
+        .device-list-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }
+        .device-list-panel h3{
+            color: #4a148c;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #d1c4e9;
+            font-size: 1.1em;
+        }
+        .device-list {
+            list-style-type: none;
+            padding-left: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .device-list li {
+            padding: 8px 5px;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        .device-list li:last-child {
+            border-bottom: none;
+        }
+        .device-list-actions button {
+            margin-left: 8px;
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        .action-button-table {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 8px;
+            transition: background-color 0.3s ease;
+        }
+        .action-button-table:hover {
+            background-color: #5e35b1;
+        }
+        .swal2-label {
+            text-align: left !important;
+            display: block !important;
+            margin: 0.75em 0 0.25em 0 !important;
+            font-size: 0.9em !important;
+            color: #555 !important;
+            font-weight: 500;
+        }
+        .swal2-input, .swal2-select, .swal2-textarea {
+            margin-bottom: 0.75em !important;
+            font-size: 1em !important;
+            width: calc(80% - 20px) !important; 
+            padding: 0.6em 0.8em !important;
+        }
+        .swal2-select {
+            height: auto !important;
+        }
+        @media (max-width: 1024px) {
+            .odp-odc-management-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .odp-odc-input-panel, .map-panel {
+                flex: none;
+                width: 100%;
+            }
+            .map-panel {
+                min-height: 400px;
+                margin-bottom: 20px;
+            }
+            .odp-odc-input-panel {
+                max-height: none;
+            }
+            #odpMap {
+            width: 100% !important;
+            height: 400px !important;
+            border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
+                </svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title">
+                    <h1>ALINOS.NET</h1>
+                    <h2>Dashboard Monitor</h2>
+                </div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar sidebar-minimized" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path>
+                    </svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html" class="active"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="page-content-container odp-odc-management-container">
+                <aside class="odp-odc-input-panel">
+                    <h2>Input Jaringan</h2>
+                    <form id="odpOdcForm">
+                        <div class="form-group">
+                            <label for="deviceName">Nama :</label>
+                            <input type="text" id="deviceName" name="deviceName" required placeholder="Contoh: ODP-COMP-01">
+                        </div>
+                        <div class="form-group">
+                            <label for="deviceType">Type :</label>
+                            <select id="deviceType" name="deviceType" required>
+                                <option value="">Pilih Tipe...</option>
+                                <option value="ODC">ODC (Optical Distribution Cabinet)</option>
+                                <option value="ODP">ODP (Optical Distribution Point)</option>
+                                <option value="JB">JB (Joint Box / Closure)</option>
+                                <option value="SAMBUNGAN">SAMBUNGAN (Titik Sambungan)</option>
+                                <option value="POLE">POLE (Tiang)</option>
+                                <option value="OTHER">LAINNYA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="coordinates">Koordinat (Latitude, Longitude) :</label>
+                            <input type="text" id="coordinates" name="coordinates" required placeholder="Contoh: -7.8225, 112.0125 (klik peta atau isi manual)">
+                        </div>
+                        <div class="form-group" id="splitterInputContainer">
+                            <label for="splitterCapacity">Kapasitas Splitter :</label>
+                            <input type="number" id="splitterCapacity" name="splitterCapacity" min="1" placeholder="Hanya untuk ODP/ODC">
+                        </div>
+                         <div class="form-group">
+                            <label for="deviceComment">Komentar :</label>
+                            <textarea id="deviceComment" name="deviceComment" rows="3" placeholder="Informasi tambahan..."></textarea>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="action-button">Save</button>
+                            <button type="button" id="cancelFormButton" class="action-button button-cancel">Cancel</button>
+                        </div>
+                    </form>
+
+                    <div class="device-list-panel">
+                        <h3>Daftar Perangkat</h3>
+                        <ul class="device-list" id="savedDeviceList">
+                            </ul>
+                    </div>
+                </aside>
+
+                <main class="map-panel">
+                    <div id="odpMap"></div>
+                </main>
+            </div>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+<script>const authTokenOdpPage = localStorage.getItem('authToken');
+if (!authTokenOdpPage) {
+    alert('Anda harus login terlebih dahulu!');
+    window.location.href = 'login.html';
+} else {
+    document.addEventListener('DOMContentLoaded', function () {
+        const backendPort = 3000;
+        
+        let map = null; 
+        let temporaryMarker = null; 
+        let savedDevices = []; 
+        let deviceMarkers = {}; 
+        let allPppoeUsernamesCache = [];
+        let globallyAssignedUsernames = new Set();
+        let isInitialGlobalDataLoaded = false;
+        let allOdpDevicesCache = [];
+        let usedOdpIds = new Set();
+        const odpMapElement = document.getElementById('odpMap');
+        const odpOdcForm = document.getElementById('odpOdcForm');
+        const deviceNameInput = document.getElementById('deviceName');
+        const deviceTypeSelect = document.getElementById('deviceType');
+        const coordinatesInput = document.getElementById('coordinates');
+        const splitterInputContainer = document.getElementById('splitterInputContainer');
+        const splitterCapacityInput = document.getElementById('splitterCapacity');
+        const deviceCommentInput = document.getElementById('deviceComment');
+        const cancelFormButton = document.getElementById('cancelFormButton');
+        const savedDeviceListUl = document.getElementById('savedDeviceList');
+        const logoutButton = document.getElementById('logoutButton');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const yearSpanSidebar = document.getElementById('currentYearSidebar');
+
+        const fetchDataWithAuth = async (endpoint, options = {}) => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                localStorage.removeItem('authToken');
+                alert('Sesi tidak ditemukan. Silakan login kembali.');
+                window.location.href = 'login.html';
+                return null;
+            }
+            const fullUrl = `/api${endpoint}`;
+            try {
+                const defaultHeaders = { 'Authorization': `Bearer ${token}` };
+                if (options.method === 'POST' || options.method === 'PUT') {
+                    defaultHeaders['Content-Type'] = 'application/json';
+                }
+                const fetchOptions = { headers: defaultHeaders, ...options };
+                const response = await fetch(fullUrl, fetchOptions);
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                if (response.status === 204 && (options.method === 'DELETE' || (options.method === 'POST' && !response.headers.get("content-type")?.includes("application/json")) || (options.method === 'PUT' && !response.headers.get("content-type")?.includes("application/json")) )) {
+                    return { success: true };
+                }
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    let errorJsonMessage = errorBody;
+                    try { const parsedError = JSON.parse(errorBody); errorJsonMessage = parsedError.message || errorBody; } catch (e) {}
+                    console.error(`[ODP_FETCH_ERROR] ${fullUrl} | Status: ${response.status} | Pesan: ${errorJsonMessage}`);
+                    Swal.fire({title:'Error Fetch', text:`Gagal memproses permintaan (${response.status}). Pesan: ${errorJsonMessage}`, icon:'error', heightAuto: false});
+                    return null;
+                }
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return await response.json();
+                } else {
+                    return { success: true, data: await response.text() }; 
+                }
+            } catch (error) {
+                console.error(`[ODP_FETCH_CATCH_ERROR] ${fullUrl}:`, error);
+                Swal.fire({title:'Error Jaringan', text: error.message || 'Tidak bisa terhubung ke server.', icon:'error', heightAuto: false});
+                return null;
+            }
+        };
+        
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                Swal.fire({
+                    icon: 'success', title: 'Logout Berhasil!', text: 'Anda akan diarahkan ke halaman login.',
+                    timer: 2000, showConfirmButton: false, timerProgressBar: true, heightAuto: false,
+                    didClose: () => { window.location.href = 'login.html'; }
+                });
+            });
+        }
+
+        function toggleSidebar() { 
+            if (sidebar) {
+                sidebar.classList.toggle('sidebar-minimized');
+                if (window.innerWidth <= 768) {
+                    document.body.classList.toggle('sidebar-mobile-active', sidebar.classList.contains('sidebar-minimized'));
+                }
+                setTimeout(function() { if (map) map.invalidateSize(); }, 350);
+            }
+        }
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay && sidebar) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('sidebar-minimized');
+                if (window.innerWidth <= 768) document.body.classList.remove('sidebar-mobile-active');
+                setTimeout(function() { if (map) map.invalidateSize(); }, 350);
+            });
+        }
+
+        if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+
+        function setActiveNav() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-nav ul li a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const linkHref = link.getAttribute('href');
+                const currentFile = currentPath.substring(currentPath.lastIndexOf('/') + 1) || 'dashboard.html';
+                const linkFile = linkHref ? linkHref.substring(linkHref.lastIndexOf('/') + 1) : "";
+
+                if (linkFile && currentFile === linkFile) { 
+                    link.classList.add('active');
+                } else if ((currentPath === '/' || currentPath.endsWith('/index.html')) && (linkHref === '/dashboard.html' || linkHref === 'dashboard.html' || linkHref === './' || linkHref === '/')) {
+                    const homeLink = Array.from(navLinks).find(l => l.getAttribute('href').includes('dashboard.html') || l.getAttribute('href') === '/');
+                    if(homeLink) homeLink.classList.add('active');
+                }
+            });
+        }
+        
+        const defaultIcon = L.AwesomeMarkers.icon({ icon: 'map-marker', markerColor: 'gray', prefix: 'fa', iconColor: 'gray' });
+        const odcIcon = L.AwesomeMarkers.icon({ icon: 'server', markerColor: 'red', prefix: 'fa', iconColor: 'red' });
+        const odpIcon = L.AwesomeMarkers.icon({ icon: 'sitemap', markerColor: 'blue', prefix: 'fa', iconColor: 'blue' });
+        const jbIcon = L.AwesomeMarkers.icon({ icon: 'archive', markerColor: 'orange', prefix: 'fa', iconColor: 'orange' });
+        const sambunganIcon = L.AwesomeMarkers.icon({ icon: 'plug', markerColor: 'green', prefix: 'fa', iconColor: 'green' });
+        const poleIcon = L.AwesomeMarkers.icon({ icon: 'broadcast-tower', markerColor: 'cadetblue', prefix: 'fa', iconColor: 'cadetblue' });
+        const otherIcon = L.AwesomeMarkers.icon({ icon: 'question-circle', markerColor: 'black', prefix: 'fa', iconColor: 'black' });
+
+        function initializeMap() {
+            if (!odpMapElement) { 
+                console.error("Elemen peta 'odpMap' tidak ditemukan dalam initializeMap!"); 
+                return; 
+            }
+            if (typeof L === 'undefined' || L === null) { 
+                console.error("Library Leaflet (L) tidak terdefinisi dalam initializeMap!"); 
+                return; 
+            }
+            
+            const initialCoordinates = [-7.8225, 112.0125]; 
+            const initialZoom = 18; 
+            
+            if (map && map.remove) {
+                map.remove();
+                map = null; 
+            }
+
+            map = L.map('odpMap').setView(initialCoordinates, initialZoom); 
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            setTimeout(() => { 
+                if (map) {
+                    map.invalidateSize(); 
+                }
+            }, 200);
+
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                if (coordinatesInput) coordinatesInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                if (temporaryMarker) map.removeLayer(temporaryMarker);
+                temporaryMarker = L.marker([lat, lng], { draggable: true })
+                    .addTo(map)
+                    .bindPopup("Lokasi dipilih. Geser marker jika perlu.<br><small>Klik lagi di peta untuk pindah.</small>")
+                    .openPopup();
+                temporaryMarker.on('dragend', function(event){
+                    const marker = event.target;
+                    const position = marker.getLatLng();
+                    if (coordinatesInput) coordinatesInput.value = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
+                });
+            });
+        }
+        async function fetchAndSetGloballyAssignedUsernames() {
+
+            Swal.fire({
+                title: 'Sinkronisasi Data Slot Global...',
+                text: 'Harap tunggu, mengambil data slot dari semua perangkat. Proses ini mungkin memerlukan waktu.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                heightAuto: false,
+                willOpen: () => {
+                    Swal.showLoading({heightAuto:false});
+                }
+            });
+
+            const tempAssignedUsernames = new Set();
+            if (!savedDevices || savedDevices.length === 0) {
+                console.warn('[GLOBAL_USERS] Daftar perangkat (savedDevices) kosong. Tidak dapat membangun daftar user global.');
+                Swal.close({heightAuto:false});
+                Swal.fire('Error', 'Gagal mendapatkan daftar perangkat untuk sinkronisasi slot global.', 'error', {heightAuto: false});
+                return;
+            }
+
+            const detailPromises = savedDevices.map(device => 
+                fetchDataWithAuth(`/odp-odc/${device.id}/details`).then(deviceDetails => {
+                    if (deviceDetails && deviceDetails.slots && Array.isArray(deviceDetails.slots)) {
+                        deviceDetails.slots.forEach(slot => {
+                            if (slot.customer_name) { 
+                                tempAssignedUsernames.add(String(slot.customer_name).toLowerCase());
+                            }
+                        });
+                    }
+                }).catch(err => {
+                    console.error(`[GLOBAL_USERS] Gagal mengambil detail untuk perangkat ${device.id}:`, err);
+                })
+            );
+
+            try {
+                await Promise.all(detailPromises);
+                globallyAssignedUsernames = tempAssignedUsernames;
+                console.log('[GLOBAL_USERS] Daftar user global yang terpakai (lowercase):', Array.from(globallyAssignedUsernames));
+            } catch (error) {
+                console.error('[GLOBAL_USERS] Terjadi kesalahan saat menunggu semua detail perangkat:', error);
+                Swal.fire('Error', 'Terjadi kesalahan saat sinkronisasi data slot global.', 'error', {heightAuto: false});
+            } finally {
+                Swal.close({heightAuto:false});
+            }
+        }
+        async function loadAllPppoeUsernames() {
+            if (allPppoeUsernamesCache.length > 0 && !(allPppoeUsernamesCache.length === 1 && allPppoeUsernamesCache[0] === 'LOADING')) {
+                return allPppoeUsernamesCache;
+            }
+            allPppoeUsernamesCache = ['LOADING']; 
+            const secrets = await fetchDataWithAuth('/pppoe/secrets'); 
+            
+            if (secrets && Array.isArray(secrets)) {
+                allPppoeUsernamesCache = secrets.map(secret => secret.name).filter(name => name);
+                allPppoeUsernamesCache.sort((a, b) => a.localeCompare(b)); 
+            } else {
+                console.error('[ODP_SLOT_EDIT] Gagal memuat nama user PPPoE atau format data salah. Respons:', secrets);
+                allPppoeUsernamesCache = []; 
+            }
+            return allPppoeUsernamesCache;
+        }
+
+        if (deviceTypeSelect && splitterInputContainer && splitterCapacityInput) {
+            deviceTypeSelect.addEventListener('change', function() {
+                if (this.value === 'ODP' || this.value === 'ODC') {
+                    splitterInputContainer.classList.add('visible');
+                    splitterCapacityInput.required = true;
+                } else {
+                    splitterInputContainer.classList.remove('visible');
+                    splitterCapacityInput.required = false;
+                    splitterCapacityInput.value = '';
+                }
+            });
+        }
+
+        if (odpOdcForm) {
+            odpOdcForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const coordsValue = coordinatesInput.value.trim();
+                let latitude = null, longitude = null;
+                if (coordsValue) {
+                    const parts = coordsValue.split(',');
+                    if (parts.length === 2) {
+                        latitude = parseFloat(parts[0].trim());
+                        longitude = parseFloat(parts[1].trim());
+                    }
+                }
+                const deviceData = {
+                    name: deviceNameInput.value.trim(),
+                    type: deviceTypeSelect.value,
+                    latitude: latitude, 
+                    longitude: longitude, 
+                    splitter_capacity: (deviceTypeSelect.value === 'ODP' || deviceTypeSelect.value === 'ODC') ? parseInt(splitterCapacityInput.value) : null,
+                    comment: deviceCommentInput.value.trim(),
+                };
+
+                if (!deviceData.name || !deviceData.type) {
+                    Swal.fire({title:'Error Input', text:'Nama dan Tipe Perangkat harus diisi!', icon:'error', heightAuto: false}); return;
+                }
+                if (latitude === null || isNaN(latitude) || longitude === null || isNaN(longitude)) {
+                    Swal.fire({title:'Error Input', text:'Format Koordinat salah atau kosong. Harap isi "latitude, longitude" atau klik peta.', icon:'error', heightAuto: false}); return;
+                }
+                if ((deviceData.type === 'ODP' || deviceData.type === 'ODC') && (!deviceData.splitter_capacity || deviceData.splitter_capacity < 1)) {
+                     Swal.fire({title:'Error Input', text:'Kapasitas Splitter harus diisi untuk ODP/ODC!', icon:'error', heightAuto: false}); return;
+                }
+                
+                const result = await fetchDataWithAuth('/odp-odc', { 
+                    method: 'POST',
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (result && result.id) { 
+                    Swal.fire({title:'Berhasil!', text:`${result.name} berhasil ditambahkan.`, icon:'success', heightAuto: false, timer: 2000, showConfirmButton: false});
+                    addDeviceToMapAndList(result); 
+                    if (!savedDevices.find(d => d.id === result.id)) {
+                        savedDevices.push(result);
+                    } else { 
+                        const index = savedDevices.findIndex(d => d.id === result.id);
+                        savedDevices[index] = result;
+                    }
+                    odpOdcForm.reset();
+                    splitterInputContainer.classList.remove('visible');
+                    if (temporaryMarker) { map.removeLayer(temporaryMarker); temporaryMarker = null; }
+                    if (coordinatesInput) coordinatesInput.value = '';
+                }
+            });
+        }
+
+        if (cancelFormButton && odpOdcForm) {
+            cancelFormButton.addEventListener('click', function() {
+                odpOdcForm.reset();
+                splitterInputContainer.classList.remove('visible');
+                if (temporaryMarker) { map.removeLayer(temporaryMarker); temporaryMarker = null; }
+                if (coordinatesInput) coordinatesInput.value = '';
+            });
+        }
+
+        function addDeviceToMapAndList(device) {
+            if (!device || typeof device.id === 'undefined' || device.latitude === undefined || device.longitude === undefined) { 
+                console.warn("addDeviceToMapAndList: Data perangkat tidak lengkap atau tidak valid.", device);
+                return; 
+            }
+            if (deviceMarkers[device.id]) { 
+                if(map && map.hasLayer(deviceMarkers[device.id])) {
+                    map.removeLayer(deviceMarkers[device.id]); 
+                }
+            }
+            
+            if (map && typeof L !== 'undefined') {
+                let selectedIcon = otherIcon; 
+                if (typeof L.AwesomeMarkers !== 'undefined' && L.AwesomeMarkers.icon) {
+                    switch (String(device.type).toUpperCase()) {
+                        case 'ODC': selectedIcon = odcIcon; break;
+                        case 'ODP': selectedIcon = odpIcon; break;
+                        case 'JB': selectedIcon = jbIcon; break;
+                        case 'SAMBUNGAN': selectedIcon = sambunganIcon; break;
+                        case 'POLE': selectedIcon = poleIcon; break;
+                    }
+                } else {
+                    console.warn("Leaflet.AwesomeMarkers tidak terdefinisi, menggunakan ikon default Leaflet jika ada.");
+                    selectedIcon = null; 
+                }
+
+                const marker = L.marker([device.latitude, device.longitude], { icon: selectedIcon }).addTo(map);
+                let popupContent = `<b>${device.name || 'N/A'} (${device.type || 'N/A'})</b>`;
+                if (device.splitter_capacity && (device.type === 'ODP' || device.type === 'ODC')) {
+                    popupContent += `<br>Kapasitas Splitter: 1x${device.splitter_capacity}`;
+                }
+                if (device.comment) {
+                    popupContent += `<br><i>${device.comment}</i>`;
+                }
+                popupContent += `<br><button class="action-button-table device-detail-btn" id="device-dtl-${device.id}" data-device-id="${device.id}" style="margin-top:5px;">Detail Lengkap</button>`;
+                marker.bindPopup(popupContent);
+                deviceMarkers[device.id] = marker;
+            } else {
+                console.warn('Peta atau Leaflet (L) tidak terdefinisi saat mencoba menambahkan marker untuk device ID', device.id);
+            }
+
+            if (savedDeviceListUl) {
+                let listItem = savedDeviceListUl.querySelector(`li[data-device-id="${String(device.id)}"]`);
+                if (!listItem) {
+                    listItem = document.createElement('li');
+                    listItem.dataset.deviceId = device.id;
+                    savedDeviceListUl.appendChild(listItem);
+                }
+                listItem.innerHTML = `
+                    <span>${device.name || 'N/A'} (${device.type || 'N/A'}) ${device.splitter_capacity ? '1x'+device.splitter_capacity : ''}</span>
+                    <div>
+                        <button class="action-button-table device-detail-btn" data-device-id="${device.id}">Detail</button>
+                    </div>
+                `;
+                const placeholder = savedDeviceListUl.querySelector('.no-device-placeholder');
+                if (placeholder) placeholder.remove();
+            }
+        }
+        
+        if (savedDeviceListUl) {
+            savedDeviceListUl.addEventListener('click', function(event) {
+                const targetButton = event.target.closest('.device-detail-btn');
+                if (targetButton) {
+                    const deviceId = targetButton.dataset.deviceId;
+                    if(deviceId) handleShowDeviceDetails(deviceId);
+                }
+            });
+        }
+        
+        function attachPopupOpenListener() {
+            if (!map) {
+                console.error('GAGAL memasang listener popupopen: objek map null.');
+                return;
+            }
+            map.on('popupopen', function (event) {
+                const currentPopup = event.popup;
+
+                if (!currentPopup) {
+                    console.error('currentPopup (event.popup) null atau undefined!');
+                    return; 
+                }
+                
+                let contentNode = null;
+
+                if (typeof currentPopup.getContentNode === 'function') {
+                    contentNode = currentPopup.getContentNode();
+                } else if (typeof currentPopup.getElement === 'function') {
+                    const popupElement = currentPopup.getElement(); 
+                    if (popupElement) {
+                        contentNode = popupElement.querySelector('.leaflet-popup-content');
+                        if (!contentNode) {
+                            console.error('Workaround GAGAL: Tidak ditemukan elemen .leaflet-popup-content di dalam popupElement.');
+                        }
+                    } else {
+                        console.error('Workaround GAGAL: currentPopup.getElement() tidak mengembalikan elemen HTML.');
+                    }
+                } else {
+                    console.error('KRITIS: Baik getContentNode maupun getElement tidak tersedia pada currentPopup. Tidak dapat melanjutkan.');
+                    return; 
+                }
+
+                if (contentNode && typeof contentNode === 'object') {
+                    const detailButton = contentNode.querySelector('.device-detail-btn');
+                    if (detailButton) {
+                        const newDetailButton = detailButton.cloneNode(true);
+                        detailButton.parentNode.replaceChild(newDetailButton, detailButton);
+
+                        newDetailButton.addEventListener('click', function() {
+                            const deviceId = this.dataset.deviceId;
+                            if(deviceId) {
+                                handleShowDeviceDetails(deviceId);
+                                if(map && event.popup && map.hasLayer(event.popup)) {
+                                   map.closePopup(event.popup); 
+                                }
+                            } else {
+                                console.warn("Device ID tidak ditemukan pada atribut data-device-id tombol popup.");
+                            }
+                        });
+                    } else {
+                        console.warn("Tombol detail (dengan kelas '.device-detail-btn') TIDAK ditemukan di dalam contentNode popup.");
+                    }
+                } else {
+                    console.warn("contentNode popup TIDAK valid (null atau bukan objek) setelah semua usaha.");
+                }
+            });
+        }
+
+        async function loadAllOdpDevices() {
+            console.log("[ODP_PAGE] Memuat daftar perangkat ODP...");
+            const odpList = await fetchDataWithAuth('/odp-odc/odp-list');
+            if (odpList && Array.isArray(odpList)) {
+                allOdpDevicesCache = odpList;
+            }
+        }
+        /**
+ * @param {number} deviceId
+ */
+        async function handleEditDevice(deviceId) {
+            const deviceToEdit = await fetchDataWithAuth(`/odp-odc/${deviceId}/details`);
+            if (!deviceToEdit || !deviceToEdit.id) {
+                Swal.fire({title:'Error', text:`Perangkat ID ${deviceId} tidak ditemukan.`, icon:'error', heightAuto:false});
+                return;
+            }
+            
+            let deviceTypeOptionsHtml = '';
+            const mainDeviceTypeSelect = document.getElementById('deviceType');
+            if (mainDeviceTypeSelect && mainDeviceTypeSelect.options) {
+                for(let option of mainDeviceTypeSelect.options) {
+                    if (option.value) {
+                        deviceTypeOptionsHtml += `<option value="${option.value}" ${option.value === deviceToEdit.type ? 'selected' : ''}>${option.textContent}</option>`;
+                    }
+                }
+            }
+            const { value: formValues } = await Swal.fire({
+                title: `Edit Info Perangkat: ${deviceToEdit.name}`,
+                html:
+                    `<div style="text-align: left; margin-top: 1rem;">`+
+                        `<label class="swal2-label">Nama Perangkat:</label><input id="swal-edit-deviceName" class="swal2-input" value="${deviceToEdit.name || ''}" required>` +
+                        `<label class="swal2-label">Tipe Perangkat:</label><select id="swal-edit-deviceType" class="swal2-select">${deviceTypeOptionsHtml}</select>` +
+                        `<label class="swal2-label">Koordinat (Lat,Lng):</label><input id="swal-edit-coordinates" class="swal2-input" value="${deviceToEdit.latitude || ''}, ${deviceToEdit.longitude || ''}" required>` +
+                        `<div id="swal-edit-splitterContainer" style="display:${(deviceToEdit.type === 'ODP' || deviceToEdit.type === 'ODC') ? 'block' : 'none'};">`+
+                            `<label class="swal2-label">Kapasitas Splitter:</label><input type="number" id="swal-edit-splitterCapacity" class="swal2-input" value="${deviceToEdit.splitter_capacity || ''}" min="1">`+
+                        `</div>` +
+                        `<label class="swal2-label">Komentar:</label><textarea id="swal-edit-deviceComment" class="swal2-textarea" rows="3">${deviceToEdit.comment || ''}</textarea>`+
+                    `</div>`,
+                focusConfirm: false,
+                heightAuto: false,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan Perubahan',
+                cancelButtonText: 'Batal',
+                didOpen: () => {
+                    const typeSelect = document.getElementById('swal-edit-deviceType');
+                    const splitterDiv = document.getElementById('swal-edit-splitterContainer');
+                    if (typeSelect && splitterDiv) {
+                        typeSelect.onchange = () => {
+                            if (typeSelect.value === 'ODP' || typeSelect.value === 'ODC') {
+                                splitterDiv.style.display = 'block';
+                            } else {
+                                splitterDiv.style.display = 'none';
+                            }
+                        };
+                    }
+                },
+                preConfirm: () => {
+                    const name = document.getElementById('swal-edit-deviceName').value.trim();
+                    const type = document.getElementById('swal-edit-deviceType').value;
+                    const coordsValue = document.getElementById('swal-edit-coordinates').value.trim();
+                    let [latitude, longitude] = (coordsValue.includes(',')) ? coordsValue.split(',').map(c => parseFloat(c.trim())) : [null, null];
+
+                    if (!name || !type) {
+                        Swal.showValidationMessage('Nama dan Tipe perangkat harus diisi!');
+                        return false;
+                    }
+                    if (latitude === null || isNaN(latitude) || longitude === null || isNaN(longitude)) {
+                        Swal.showValidationMessage('Format koordinat salah. Gunakan format: -7.123, 112.456');
+                        return false;
+                    }
+                    
+                    let splitter_capacity = null;
+                    if (type === 'ODP' || type === 'ODC') {
+                        splitter_capacity = parseInt(document.getElementById('swal-edit-splitterCapacity').value) || null;
+                    }
+                    
+                    return {
+                        name, type, latitude, longitude,
+                        splitter_capacity,
+                        comment: document.getElementById('swal-edit-deviceComment').value.trim()
+                    };
+                }
+            });
+            if (formValues) {
+                const result = await fetchDataWithAuth(`/odp-odc/${deviceId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formValues)
+                });
+                
+                if (result && result.id) {
+                    Swal.fire({title:'Berhasil!', text:'Info perangkat berhasil diperbarui.', icon:'success', heightAuto:false, timer:1500, showConfirmButton:false});
+                    loadExistingDevices();
+                }
+            }
+        }
+        async function handleEditSingleDeviceSlot(device, slotNumberToEdit) {
+            const slotData = device.slots.find(s => s.number === slotNumberToEdit);
+            if (!slotData) {
+                Swal.fire('Error', `Data untuk slot ${slotNumberToEdit} tidak ditemukan.`, 'error', { heightAuto: false });
+                return;
+            }
+
+            let inputHtml = '';
+            let inputLabel = '';
+            let initialValue = '';
+
+            if (device.type === 'ODC') {
+                inputLabel = 'Sambungkan ke Perangkat ODP';
+                initialValue = slotData.linked_device_id || '';
+                
+                let options = '<option value="">-- Kosongkan Slot --</option>';
+                if (allOdpDevicesCache && allOdpDevicesCache.length > 0) {
+                    allOdpDevicesCache.forEach(odp => {
+                        if (!usedOdpIds.has(odp.id) || odp.id === initialValue) {
+                            options += `<option value="${odp.id}" ${odp.id == initialValue ? 'selected' : ''}>${odp.name}</option>`;
+                        }
+                    });
+                }
+                inputHtml = `<select id="swal-input-link" class="swal2-select">${options}</select>`;
+            } else if (device.type === 'ODP') {
+                inputLabel = 'Sambungkan ke Pelanggan PPPoE';
+                initialValue = slotData.customer_name || '';
+                let options = '<option value="">-- Kosongkan Slot --</option>';
+                if (allPppoeUsernamesCache && allPppoeUsernamesCache.length > 0) {
+                    allPppoeUsernamesCache.forEach(username => {
+                        options += `<option value="${username}" ${username === initialValue ? 'selected' : ''}>${username}</option>`;
+                    });
+                }
+                inputHtml = `<select id="swal-input-link" class="swal2-select">${options}</select>`;
+            } else {
+                return;
+            }
+
+            Swal.fire({
+                title: `Edit Slot ${slotNumberToEdit} di ${device.name}`,
+                html: `
+                    <div style="text-align: left; margin-top: 1rem;">
+                        <label for="swal-input-link" style="display: block; margin-bottom: .5rem; font-weight: 600;">${inputLabel}</label>
+                        ${inputHtml}
+                        <label for="swal-input-notes" style="display: block; margin-top: 1rem; margin-bottom: .5rem; font-weight: 600;">Catatan</label>
+                        <textarea id="swal-input-notes" class="swal2-textarea" placeholder="Catatan untuk slot ini...">${slotData.notes || ''}</textarea>
+                    </div>`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan Perubahan',
+                cancelButtonText: 'Batal',
+                heightAuto: false,
+                preConfirm: () => {
+                    const linkValue = document.getElementById('swal-input-link').value;
+                    const notesValue = document.getElementById('swal-input-notes').value;
+                    let payload = { notes: notesValue };
+                    if (device.type === 'ODC') {
+                        payload.linked_device_id = linkValue || null;
+                    } else {
+                        payload.customer_pppoe_name = linkValue || null;
+                    }
+                    return payload;
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const updateResponse = await fetchDataWithAuth(`/odp-odc/device/${device.id}/slot/${slotNumberToEdit}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(result.value)
+                    });
+                    if (updateResponse) {
+                        await Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Slot berhasil diperbarui.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            heightAuto: false
+                        });
+                        handleShowDeviceDetails(device.id);
+                    }
+                }
+            });
+        }
+        /**
+         * @param {object} device
+         * @param {number} slotNumberToEdit
+         */
+        async function handleShowDeviceDetails(deviceId) {
+            console.log(`[ODP_PAGE] Menampilkan detail & slot untuk device ID: ${deviceId}`);
+            const device = await fetchDataWithAuth(`/odp-odc/${deviceId}/details`);
+
+            if (!device || !device.id) {
+                Swal.fire({ title: 'Error', text: 'Data perangkat tidak ditemukan atau gagal dimuat.', icon: 'error', heightAuto: false });
+                return;
+            }
+
+            let slotHtml = '';
+            let usedSlotsCount = 0;
+            const totalCapacity = parseInt(device.splitter_capacity) || 0;
+
+            if ((device.type === 'ODP' || device.type === 'ODC') && totalCapacity > 0) {
+                slotHtml += '<ul style="list-style-type:none; padding-left:0; margin-top:10px; max-height: 200px; overflow-y:auto; font-size:0.9em;">';
+                const existingSlotsMap = new Map();
+                if (device.slots && Array.isArray(device.slots)) {
+                    device.slots.forEach(s_item => {
+                        if (s_item && typeof s_item.number === 'number') {
+                            existingSlotsMap.set(s_item.number, s_item);
+                            if (s_item.customer_name || s_item.linked_device_id) {
+                                usedSlotsCount++;
+                            }
+                        }
+                    });
+                }
+                for (let i = 1; i <= totalCapacity; i++) {
+                    const slotData = existingSlotsMap.get(i);
+                    let customerName = 'Kosong';
+                    let status = 'Tersedia';
+                    if (slotData) {
+                        if (device.type === 'ODC' && slotData.linked_device_id) {
+                            const linkedOdp = allOdpDevicesCache.find(odp => odp.id === slotData.linked_device_id);
+                            customerName = `Terhubung ke: ${linkedOdp ? linkedOdp.name : 'ID ' + slotData.linked_device_id}`;
+                            status = 'Terpakai';
+                        } else if (device.type === 'ODP' && slotData.customer_name) {
+                            customerName = slotData.customer_name;
+                            status = 'Terpakai';
+                        }
+                    }
+                    slotHtml += `
+                        <li style="border-bottom: 1px dashed #f0f0f0;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span><strong>Slot ${i}:</strong> ${customerName}</span>
+                                <em style="margin-left: 10px; color:#555;">(${status})</em>
+                            </div>
+                        </li>`;
+                }
+                slotHtml += '</ul>';
+            } else {
+                slotHtml += '<p style="margin-top:10px;">Kapasitas splitter belum ditentukan.</p>';
+            }
+
+            const availableSlots = totalCapacity > 0 ? totalCapacity - usedSlotsCount : 0;
+            let htmlContent = `
+                <div style="text-align: left; font-size:0.9em;">
+                    <p><strong>ID Perangkat:</strong> ${device.id}</p>
+                    <p><strong>Nama:</strong> ${device.name}</p>
+                    <p><strong>Tipe:</strong> ${device.type}</p>
+                    <p><strong>Koordinat:</strong> ${device.latitude}, ${device.longitude}</p>
+                    ${device.splitter_capacity ? `<p><strong>Splitter:</strong> 1x${device.splitter_capacity}</p>` : ''}
+                    ${device.comment ? `<p><strong>Komentar:</strong> ${device.comment}</p>` : ''}
+                    <hr style="margin: 15px 0;">
+                    <h4>Pengisian Slot (${usedSlotsCount} terpakai, ${availableSlots} tersedia)</h4>
+                    ${slotHtml}
+                </div>`;
+
+            Swal.fire({
+                title: `Detail Perangkat: ${device.name}`,
+                html: htmlContent,
+                width: '500px',
+                icon: 'info',
+                showConfirmButton: true,
+                confirmButtonText: 'Edit Pengisian Slot',
+                confirmButtonColor: '#673ab7',
+                showDenyButton: true,
+                denyButtonText: 'Hapus Perangkat',
+                denyButtonColor: '#d33',
+                showCancelButton: true,
+                cancelButtonText: 'Edit Info Perangkat',
+                cancelButtonColor: '#ffc107',
+                heightAuto: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let slotOptionsHtml = '';
+                    for (let i = 1; i <= totalCapacity; i++) {
+                        slotOptionsHtml += `<option value="${i}">Slot ${i}</option>`;
+                    }
+                    Swal.fire({
+                        title: 'Pilih Slot untuk Diedit',
+                        html: `<select id="swal-input-slot-number" class="swal2-select">${slotOptionsHtml}</select>`,
+                        confirmButtonText: 'Lanjutkan',
+                        showCancelButton: true,
+                        heightAuto: false,
+                        preConfirm: () => document.getElementById('swal-input-slot-number').value
+                    }).then((slotResult) => {
+                        if (slotResult.isConfirmed && slotResult.value) {
+                            const slotNumberToEdit = parseInt(slotResult.value);
+                            handleEditSingleDeviceSlot(device, slotNumberToEdit);
+                        }
+                    });
+                } else if (result.isDenied) {
+                    handleDeleteDevice(device.id, device.name);
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    handleEditDevice(device.id);
+                }
+            });
+        }
+
+        async function handleDeleteDevice(deviceId, deviceName) {
+            const confirmation = await Swal.fire({
+                title: `Hapus ${deviceName}?`, text: "Data ini akan dihapus permanen!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#777',
+                confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal', heightAuto:false
+            });
+            if (confirmation.isConfirmed) {
+                const result = await fetchDataWithAuth(`/odp-odc/${deviceId}`, { method: 'DELETE' });
+                if (result && result.success) {
+                    Swal.fire({title:'Dihapus!', text:`${deviceName} berhasil dihapus.`, icon:'success', heightAuto:false, timer:1500, showConfirmButton:false});
+                    loadExistingDevices();
+                }
+            }
+        }
+
+        async function loadExistingDevices() {
+            console.log("[ODP_PAGE] Daftar perangkat dasar sedang dimuat...");
+            const devices = await fetchDataWithAuth('/odp-odc/all');
+            document.getElementById('savedDeviceList').innerHTML = '';
+            if (map) {
+                Object.values(deviceMarkers).forEach(marker => map.removeLayer(marker));
+                deviceMarkers = {};
+            }
+            usedOdpIds.clear();
+            if (devices && Array.isArray(devices)) {
+                const allSlots = await fetchDataWithAuth('/odp-odc/slots/all');
+                if(allSlots && Array.isArray(allSlots)) {
+                    allSlots.forEach(slot => {
+                        if (slot.linked_device_id) {
+                            usedOdpIds.add(slot.linked_device_id);
+                        }
+                    });
+                }
+                console.log('[ODP_PAGE] ID ODP yang sudah terpakai:', usedOdpIds);
+
+                if (devices && Array.isArray(devices)) {
+                    devices.forEach(device => addDeviceToMapAndList(device));
+                    console.log("[ODP_PAGE] Daftar perangkat dasar berhasil dimuat.");
+                }
+            } else {
+                console.error("Gagal memuat daftar perangkat atau format tidak valid.");
+            }
+        }
+
+        function initializeOdpOdcPage() {
+            setActiveNav();
+            initializeMap();
+            loadAllOdpDevices();
+
+            if (map) {
+                attachPopupOpenListener();
+            } else {
+                console.error("Gagal memasang listener popup karena map tidak terinisialisasi setelah initializeMap().");
+            }
+            if (!isInitialGlobalDataLoaded) {
+                Swal.fire({ 
+                    title: 'Memuat Data Awal...',
+                    text: 'Harap tunggu sebentar.',
+                    allowOutsideClick: false,
+                    showConfirmButton: false, 
+                    heightAuto: false,
+                    didOpen: () => { Swal.showLoading({heightAuto:false}); }
+
+                });
+
+                loadAllPppoeUsernames()
+                    .then(() => {
+                        console.log("[ODP_PAGE] Nama user PPPoE berhasil dimuat.");
+                        return loadExistingDevices(); 
+                    })
+                    .then(() => {
+                        console.log("[ODP_PAGE] Daftar perangkat dasar berhasil dimuat.");
+                        return fetchAndSetGloballyAssignedUsernames(); 
+                    })
+                    .then(() => {
+                        console.log("[ODP_PAGE] Semua data awal (PPPoE, Perangkat, Slot Global) berhasil dimuat.");
+                        isInitialGlobalDataLoaded = true;
+                        Swal.close({heightAuto:false});
+                    })
+                    .catch(err => {
+                        console.error("[ODP_PAGE] Error selama urutan pemuatan data awal halaman:", err);
+                        isInitialGlobalDataLoaded = true;
+                        Swal.close({heightAuto:false});
+                        Swal.fire('Error Pemuatan Data', 'Gagal memuat semua data awal yang diperlukan. Beberapa fitur mungkin tidak optimal.', 'error', {heightAuto:false});
+                    });
+            }
+        }
+
+        initializeOdpOdcPage();
+    });
+}
+    </script>
+</body>
+</html></script>
+</body>
+</html>
+</script>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Hotspot Management</title>
+    <meta name="description" content="Manajemen User Hotspot ALINOS.NET">
+    <meta name="author" content="Skydash.NET">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            scrollbar-gutter: stable;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body.swal2-shown, body.swal2-height-auto, body.swal2-iosfix {
+            overflow: hidden !important;
+            padding-right: 0 !important;
+        }
+
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .site-header .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo-title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+
+        .site-title h1 {
+            font-size: 1.8em;
+            color: #4a148c;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .site-title h2 {
+            font-size: 0.95em;
+            color: #555555;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover {
+            background-color: #5e35b1;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 900;
+        }
+
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .sidebar-toggle-button svg {
+            display: block;
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul {
+            list-style-type: none;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            background-color: transparent;
+            font-weight: normal;
+        }
+        .sidebar-nav li a:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+        .sidebar-nav li a.active {
+            background-color: #7e57c2;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .nav-icon {
+            margin-right: 15px;
+            font-size: 1.3em;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: margin 0.3s ease;
+        }
+        .nav-text {
+            opacity: 1;
+            transition: opacity 0.15s 0.1s ease;
+        }
+
+        .sidebar.sidebar-minimized {
+            width: 70px;
+        }
+        .sidebar.sidebar-minimized .nav-text {
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+        }
+        .sidebar.sidebar-minimized .nav-icon {
+            margin-right: 0;
+        }
+        .sidebar.sidebar-minimized .sidebar-header {
+            justify-content: center;
+            padding: 15px 0;
+        }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg {
+            transform: rotate(180deg);
+        }
+        .sidebar.sidebar-minimized .site-footer-sidebar {
+            display: none;
+        }
+
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .main-content-wrapper {
+            flex-grow: 1;
+            background-color: #f0f2f5;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .page-content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .two-column-layout {
+            display: flex;
+            gap: 25px;
+        }
+        .main-column {
+            flex: 2.5;
+            min-width: 0;
+        }
+        .side-panel-column {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .content-section {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
+        .content-section h2, .content-section h3 {
+            color: #4a148c;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ab47bc;
+        }
+        .content-section h3 {
+            font-size: 1.3em;
+            margin-top: 0;
+            border-bottom-width: 1px;
+            border-color: #d1c4e9;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #5e35b1;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1c4e9;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: #fff;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #7e57c2;
+            box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+            outline: none;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .action-button, button[type="submit"] {
+            background-color: #673ab7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .action-button:hover, button[type="submit"]:hover {
+            background-color: #512da8;
+        }
+
+        .action-button-table {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .action-button-table:hover { background-color: #5e35b1; }
+        .action-button-table.remove { background-color: #e53935; }
+        .action-button-table.remove:hover { background-color: #c62828; }
+        .action-button-table.disconnect { background-color: #f57c00; }
+        .action-button-table.disconnect:hover { background-color: #ef6c00; }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 60vh;
+            overflow-y: auto;
+            position: relative;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        table.data-table th, table.data-table td {
+            border-bottom: 1px solid #e0e0e0;
+            border-right: 1px solid #e0e0e0;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.data-table th:first-child, table.data-table td:first-child { border-left: none; }
+        table.data-table th:last-child, table.data-table td:last-child { border-right: none; }
+        table.data-table th {
+            background-color: #f4f0f8;
+            color: #4a148c;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        table.data-table tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        table.data-table tbody tr:hover { background-color: #f0e6ff; }
+
+        th.sortable-header { cursor: pointer; }
+        th.sortable-header .sort-indicator::after {
+            content: ''; margin-left: 7px; font-size: 0.8em; display: inline-block;
+            width: 0; height: 0;
+            border-left: 4px solid transparent; border-right: 4px solid transparent;
+            opacity: 0.5;
+        }
+        th.sortable-header.sort-asc .sort-indicator::after { border-bottom: 5px solid #4a148c; border-top: 0; opacity: 1; }
+        th.sortable-header.sort-desc .sort-indicator::after { border-top: 5px solid #4a148c; border-bottom: 0; opacity: 1; }
+
+        .log-entries {
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85em;
+            background-color: #fdfdfd;
+            border: 1px solid #eeeeee;
+            padding: 10px;
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+        .log-entries p { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #eeeeee; word-break: break-all; }
+        .log-entries p:last-child { border-bottom: none; margin-bottom: 0; }
+
+        #qrCodeModal {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff; margin: auto; padding: 25px; border-radius: 8px;
+            width: 90%; max-width: 320px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content h4 { margin-bottom: 20px; color: #4a148c; font-size: 1.2em; }
+        #qrCodeCanvas { border: 1px solid #eee; }
+        #voucherInfo { margin-top:15px; font-size:0.9em; }
+        .close-modal-btn {
+            margin-top: 20px; background-color: #7e57c2; color:white;
+            padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;
+        }
+        .close-modal-btn:hover { background-color: #5e35b1; }
+
+        .swal2-label {
+            text-align: left !important; display: block !important;
+            margin: 0.75em 0 0.25em 0 !important; font-size: 0.9em !important;
+            color: #555 !important; font-weight: 500;
+        }
+        .swal2-input, .swal2-select, .swal2-textarea {
+            margin-bottom: 0.75em !important; font-size: 1em !important;
+        }
+        .hotspot-actions-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .hotspot-actions-bar .action-trigger-button { 
+            flex-grow: 1;
+        }
+         .expense-list li .expense-amount-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .expense-list li .action-button-edit.expense-edit-btn {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+
+        /* Responsif */
+        @media (max-width: 992px) {
+            .two-column-layout { flex-direction: column; }
+            .main-column, .side-panel-column { flex: none; width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end; padding: 15px 10px 15px 15px;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            body.sidebar-mobile-active .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px; }
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px; }
+            .site-title h1 { font-size: 1.2em; }
+            .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+            .main-content-wrapper { padding: 15px; }
+            .page-content-container, .two-column-layout { gap: 15px; }
+            .content-section { padding: 15px; }
+            .content-section h2, .content-section h3 { margin-bottom: 15px; font-size: 1.2em; }
+            .content-section h3 { font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title"><h1>ALINOS.NET</h1><h2>Dashboard Monitor</h2></div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path></svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html" class="active"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="page-content-container hotspot-management-container">
+
+                <div class="hotspot-actions-bar">
+                    <button id="showCreateUserHotspotFormBtn" class="action-button action-trigger-button" style="background-color: rgb(18, 151, 18);">Create New User</button>
+                    <button id="showUserBandwidthModalBtn" class="action-button action-trigger-button">Statistik User Hotspot</button>
+                </div>
+
+                <section class="content-section">
+                    <h2>Daftar User Hotspot</h2>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="hotspotUserTable">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>Profil</th>
+                                    <th>Server</th>
+                                    <th>Uptime Limit</th>
+                                    <th>Data Limit</th>
+                                    <th>Komentar</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotspotUserTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2>User Hotspot Aktif</h2>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="hotspotActiveTable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Alamat IP</th>
+                                    <th>MAC Address</th>
+                                    <th>Waktu Aktif</th>
+                                    <th>Sisa Waktu</th>
+                                    <th>Penggunaan</th>
+                                    <th>Komentar</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotspotActiveTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+    <div id="qrCodeModal">
+        <div class="modal-content">
+            <h4 id="qrCodeModalTitle">Scan QR Code Voucher</h4>
+            <canvas id="qrCodeCanvas"></canvas>
+            <div id="voucherInfo"></div>
+            <button id="closeQrModalBtn" class="close-modal-btn">Tutup</button>
+        </div>
+    </div>
+    <script>
+        const authTokenHotspotPage = localStorage.getItem('authToken');
+
+if (!authTokenHotspotPage) {
+    alert('Anda harus login terlebih dahulu!');
+    window.location.href = 'login.html';
+} else {
+    document.addEventListener('DOMContentLoaded', function () {
+        const backendPort = 3000;
+        let hotspotProfilesCache = [];
+        let hotspotUsersCache = [];
+        /**
+         * @param {string} endpoint
+         * @param {object} options
+         * @returns {Promise<object|null>}
+         */
+        const fetchDataWithAuth = async (endpoint, options = {}) => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                localStorage.removeItem('authToken');
+                alert('Sesi tidak ditemukan. Silakan login kembali.');
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const fullUrl = `/api${endpoint}`;
+            const defaultHeaders = { 'Authorization': `Bearer ${token}` };
+            if (options.method === 'POST' || options.method === 'PUT') {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+            const fetchOptions = { headers: defaultHeaders, ...options };
+
+            try {
+                const response = await fetch(fullUrl, fetchOptions);
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                if (response.status === 204 && (options.method === 'DELETE' || options.method === 'POST' || options.method === 'PUT')) {
+                    return { success: true }; 
+                }
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    let errorJsonMessage = errorBody;
+                    try { 
+                        const parsedError = JSON.parse(errorBody);
+                        errorJsonMessage = parsedError.message || errorBody;
+                    } catch (e) {}
+                    console.error(`[FETCH_ERROR] ${fullUrl} | Status: ${response.status} | Pesan: ${errorJsonMessage}`);
+                    Swal.fire({title:'Error Fetch', text:`Gagal memproses permintaan (${response.status}). Pesan: ${errorJsonMessage}`, icon:'error', heightAuto: false});
+                    return null;
+                }
+                
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return await response.json();
+                } else {
+                    return { success: true, data: await response.text() }; 
+                }
+            } catch (error) {
+                console.error(`[FETCH_CATCH_ERROR] ${fullUrl}:`, error);
+                Swal.fire({title:'Error Jaringan', text: error.message || 'Tidak bisa terhubung ke server.', icon:'error', heightAuto: false});
+                return null;
+            }
+        };
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === undefined || bytes === null || bytes === 0) return '0 Bytes';
+            bytes = parseInt(bytes, 10);
+            if (isNaN(bytes)) return 'N/A';
+            const k = 1000; 
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+            if (bytes === 0) return '0 Bytes';
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            if (i >= sizes.length || i < 0 ) return bytes + ' Bytes'; 
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function parseMikrotikDataLimit(limitStr) {
+            if (!limitStr || typeof limitStr !== 'string') return '';
+            const s = String(limitStr).toUpperCase().trim();
+            if (s === '0' || s === '') return '0';
+
+            let multiplier = 1;
+            let numericPartStr = s;
+
+            if (s.endsWith('K') || s.endsWith('KB')) { multiplier = 1000; numericPartStr = s.replace(/[KB\s]/gi, '');}
+            else if (s.endsWith('M') || s.endsWith('MB')) { multiplier = 1000 * 1000; numericPartStr = s.replace(/[MB\s]/gi, '');}
+            else if (s.endsWith('G') || s.endsWith('GB')) { multiplier = 1000 * 1000 * 1000; numericPartStr = s.replace(/[GB\s]/gi, '');}
+            
+            const numericPart = parseFloat(numericPartStr);
+            if (isNaN(numericPart)) return limitStr; 
+            return String(Math.floor(numericPart * multiplier));
+        }
+        
+        function formatBytesToMikrotikInput(bytes) {
+            bytes = parseInt(bytes, 10);
+            if (isNaN(bytes) || bytes === 0) return '';
+            const k = 1000; 
+            if (bytes % (k*k*k) === 0 && bytes >= (k*k*k)) return (bytes / (k*k*k)) + 'G';
+            if (bytes % (k*k) === 0 && bytes >= (k*k)) return (bytes / (k*k)) + 'M';
+            if (bytes % k === 0 && bytes >= k) return (bytes / k) + 'K';
+            return String(bytes);
+        }
+
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                Swal.fire({
+                    icon: 'success', title: 'Logout Berhasil!', text: 'Anda akan diarahkan ke halaman login.',
+                    timer: 2000, showConfirmButton: false, timerProgressBar: true, heightAuto: false,
+                    didClose: () => { window.location.href = 'login.html'; }
+                });
+            });
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() { 
+            if (sidebar) {
+                sidebar.classList.toggle('sidebar-minimized');
+                if (window.innerWidth <= 768) { 
+                    document.body.classList.toggle('sidebar-mobile-active', sidebar.classList.contains('sidebar-minimized'));
+                }
+            }
+        }
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay && sidebar) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('sidebar-minimized');
+                if (window.innerWidth <= 768) {
+                    document.body.classList.remove('sidebar-mobile-active');
+                }
+            });
+        }
+
+        const yearSpanSidebar = document.getElementById('currentYearSidebar');
+        if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+        function setActiveNav() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-nav ul li a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const linkHref = link.getAttribute('href');
+                const currentFile = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+                const linkFile = linkHref ? linkHref.substring(linkHref.lastIndexOf('/') + 1) : "";
+
+                if (linkFile && currentFile === linkFile && currentFile === 'hotspot.html') {
+                    link.classList.add('active');
+                } else if ((currentPath === '/' || currentPath.endsWith('/dashboard.html')) && (linkHref === '/dashboard.html' || linkHref === 'dashboard.html')) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        const showCreateUserBtn = document.getElementById('showCreateUserHotspotFormBtn');
+        const showBandwidthModalBtn = document.getElementById('showUserBandwidthModalBtn');
+        const hotspotUserTableBody = document.getElementById('hotspotUserTableBody');
+        const hotspotActiveTableBody = document.getElementById('hotspotActiveTableBody');
+        const qrCodeModal = document.getElementById('qrCodeModal');
+        const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+        const qrCodeModalTitle = document.getElementById('qrCodeModalTitle');
+        const voucherInfoDiv = document.getElementById('voucherInfo');
+        const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+        if (closeQrModalBtn) closeQrModalBtn.onclick = () => qrCodeModal.style.display = 'none';
+        if (qrCodeModal) qrCodeModal.onclick = (event) => { if (event.target === qrCodeModal) qrCodeModal.style.display = "none"; };
+
+        async function loadHotspotProfiles() {
+            const hotspotProfileSelectElement = document.getElementById('hotspotProfile');
+            if (!hotspotProfileSelectElement && !showCreateUserBtn) return;
+
+            const profiles = await fetchDataWithAuth('/hotspot/profiles');
+            if (profiles && Array.isArray(profiles)) {
+                hotspotProfilesCache = profiles;
+            } else {
+                hotspotProfilesCache = [];
+                console.error("[HOTSPOT_SCRIPT] Gagal memuat profil hotspot atau format salah.");
+            }
+        }
+
+        async function loadHotspotUsers() {
+            if (!hotspotUserTableBody) return;
+            const users = await fetchDataWithAuth('/hotspot/users/all');
+            hotspotUserTableBody.innerHTML = '';
+            if (users && Array.isArray(users)) {
+                hotspotUsersCache = users; 
+                if (users.length === 0) {
+                    hotspotUserTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada user hotspot terdaftar.</td></tr>'; return;
+                }
+                users.forEach((user, index) => {
+                    const row = hotspotUserTableBody.insertRow();
+                    row.insertCell().textContent = index + 1;
+                    row.insertCell().textContent = user.name || '-';
+                    row.insertCell().textContent = user.profile || '-';
+                    row.insertCell().textContent = user.server || 'all';
+                    row.insertCell().textContent = user['limit-uptime'] || '∞';
+                    row.insertCell().textContent = user['limit-bytes-total'] ? formatBytes(parseInt(user['limit-bytes-total'],10)) : '∞';
+                    row.insertCell().textContent = user.comment || '-';
+                    const actionsCell = row.insertCell();
+                    const editBtn = document.createElement('button');
+                    editBtn.classList.add('action-button-table', 'hotspot-user-edit-btn'); 
+                    editBtn.textContent = 'Edit';
+                    editBtn.dataset.userId = user['.id']; 
+                    editBtn.dataset.userName = user.name;
+                    actionsCell.appendChild(editBtn);
+                    const removeBtn = document.createElement('button');
+                    removeBtn.classList.add('action-button-table', 'remove', 'hotspot-user-remove-btn'); 
+                    removeBtn.textContent = 'Remove';
+                    removeBtn.dataset.userId = user['.id']; 
+                    removeBtn.dataset.userName = user.name;
+                    actionsCell.appendChild(removeBtn);
+                });
+            } else {
+                hotspotUserTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Gagal memuat data user hotspot.</td></tr>';
+            }
+        }
+
+        async function loadActiveHotspotUsers() {
+            if (!hotspotActiveTableBody) return;
+            const activeUsers = await fetchDataWithAuth('/hotspot/active');
+            hotspotActiveTableBody.innerHTML = '';
+            if (activeUsers && Array.isArray(activeUsers)) {
+                 if (activeUsers.length === 0) {
+                    hotspotActiveTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada user hotspot aktif.</td></tr>'; return;
+                }
+                activeUsers.forEach(user => {
+                    const row = hotspotActiveTableBody.insertRow();
+                    row.insertCell().textContent = user.user || '-';
+                    row.insertCell().textContent = user.address || '-';
+                    row.insertCell().textContent = user['mac-address'] || '-';
+                    row.insertCell().textContent = user.uptime || '-';
+                    row.insertCell().textContent = user['session-time-left'] || '∞';
+                    row.insertCell().textContent = `${formatBytes(parseInt(user['bytes-in'] || 0, 10))} ↓ / ${formatBytes(parseInt(user['bytes-out'] || 0, 10))} ↑`;
+                    row.insertCell().textContent = user.comment || '-';
+                    const actionsCell = row.insertCell();
+                    const makeCookieBtn = document.createElement('button');
+                    makeCookieBtn.classList.add('action-button-table', 'hotspot-active-cookie-btn'); 
+                    makeCookieBtn.textContent = 'Make Cookie'; // Atau 'Make Binding'
+                    makeCookieBtn.dataset.activeId = user['.id'];
+                    actionsCell.appendChild(makeCookieBtn);
+                    const disconnectBtn = document.createElement('button');
+                    disconnectBtn.classList.add('action-button-table', 'disconnect', 'hotspot-active-disconnect-btn'); 
+                    disconnectBtn.textContent = 'Disconnect';
+                    disconnectBtn.dataset.activeId = user['.id'];
+                    actionsCell.appendChild(disconnectBtn);
+                });
+            } else {
+                 hotspotActiveTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Gagal memuat data user aktif.</td></tr>';
+            }
+        }
+
+        if (showCreateUserBtn) {
+            showCreateUserBtn.addEventListener('click', async () => {
+                if (hotspotProfilesCache.length === 0) await loadHotspotProfiles(); 
+                let profileOptionsHtml = '<option value="">Pilih Profil...</option>';
+                hotspotProfilesCache.forEach(profile => {
+                    if (profile && profile.name) profileOptionsHtml += `<option value="${profile.name}">${profile.name}</option>`;
+                });
+
+                const { value: formValues } = await Swal.fire({
+                    title: 'Buat User Hotspot Baru',
+                    html:
+                        `<label class="swal2-label">Username:</label><input id="swal-hs-user" class="swal2-input" required>` +
+                        `<label class="swal2-label">Password:</label><input type="password" id="swal-hs-password" class="swal2-input">` +
+                        `<label class="swal2-label">Profil:</label><select id="swal-hs-profile" class="swal2-select" style=" padding:0.5em; margin-bottom:1em;" required>${profileOptionsHtml}</select>` +
+                        `<label class="swal2-label">Batas Waktu (Contoh: 1d2h30m0s):</label><input id="swal-hs-timelimit" class="swal2-input" placeholder="Kosongkan = tidak ada batas">` +
+                        `<label class="swal2-label">Batas Kuota (Contoh: 1G, 500M, 1024K):</label><input id="swal-hs-datalimit" class="swal2-input" placeholder="Kosongkan = tidak ada batas">` +
+                        `<label class="swal2-label">Komentar:</label><input id="swal-hs-comment" class="swal2-input">`,
+                    focusConfirm: false, confirmButtonText: 'Tambah User', showCancelButton: true, cancelButtonText: 'Batal', heightAuto: false,
+                    preConfirm: () => {
+                        const user = document.getElementById('swal-hs-user').value.trim();
+                        const profile = document.getElementById('swal-hs-profile').value;
+                        if (!user || !profile) { Swal.showValidationMessage('Username dan Profil harus diisi!'); return false; }
+                        return {
+                            user, password: document.getElementById('swal-hs-password').value, profile,
+                            server: 'all', 
+                            timeLimit: document.getElementById('swal-hs-timelimit').value.trim(),
+                            dataLimit: document.getElementById('swal-hs-datalimit').value.trim(),
+                            comment: document.getElementById('swal-hs-comment').value.trim()
+                        }
+                    }
+                });
+                if (formValues) {
+                    const dataToSend = { 
+                        user: formValues.user,
+                        profile: formValues.profile,
+                        server: formValues.server
+                     };
+                    if (formValues.password) dataToSend.password = formValues.password;
+                    if (formValues.timeLimit) dataToSend.timeLimit = formValues.timeLimit;
+                    if (formValues.dataLimit) dataToSend.dataLimit = parseMikrotikDataLimit(formValues.dataLimit);
+                    if (formValues.comment) dataToSend.comment = formValues.comment;
+                    
+                    const result = await fetchDataWithAuth('/hotspot/users', { method: 'POST', body: JSON.stringify(dataToSend) });
+                    if (result && result.success) {
+                        Swal.fire({title:'Berhasil!', text:`User hotspot ${dataToSend.user} berhasil ditambahkan.`, icon:'success', heightAuto:false, timer: 2000, showConfirmButton: false});
+                        loadHotspotUsers();
+                        if (dataToSend.user) generateAndShowQRCode(dataToSend.user, dataToSend.password || '');
+                    }
+                }
+            });
+        }
+
+        if (showBandwidthModalBtn) {
+            showBandwidthModalBtn.addEventListener('click', async () => {
+                if (hotspotUsersCache.length === 0) await loadHotspotUsers();
+                let userOptionsHtml = '<option value="">Pilih User...</option>';
+                hotspotUsersCache.forEach(user => {
+                    if (user && user.name) userOptionsHtml += `<option value="${user.name}">${user.name}</option>`;
+                });
+                const { value: selectedUser } = await Swal.fire({
+                    title: 'Pilih User Hotspot',
+                    html: `<label class="swal2-label"></label><select id="swal-select-user-bw" class="swal2-select" style=" padding:0.5em;">${userOptionsHtml}</select>`,
+                    focusConfirm: false, confirmButtonText: 'Tampilkan Detail', showCancelButton: true, cancelButtonText: 'Batal', heightAuto: false,
+                    preConfirm: () => document.getElementById('swal-select-user-bw').value
+                });
+                if (selectedUser) {
+                    Swal.fire({ title: `Memuat data untuk ${selectedUser}...`, didOpen: () => Swal.showLoading(), heightAuto: false, allowOutsideClick: false, showConfirmButton: false });
+                    const usageData = await fetchDataWithAuth(`/hotspot/usage/${selectedUser}`);
+                    Swal.close(); // Tutup popup loading
+                    if (usageData && usageData.address) {
+                        Swal.fire({
+                            title: `Detail Penggunaan: ${usageData.user || selectedUser}`,
+                            html: `<div style="text-align: left; font-size: 0.9em;">
+                                   <p><strong>Alamat IP:</strong> ${usageData.address}</p>
+                                   <p><strong>MAC Address:</strong> ${usageData.macAddress || 'N/A'}</p>
+                                   <p><strong>Waktu Aktif (Sesi Ini):</strong> ${usageData.uptime || 'N/A'}</p>
+                                   <p><strong>Total Data Masuk (Sesi Ini):</strong> ${formatBytes(parseInt(usageData.bytesIn || 0,10))}</p>
+                                   <p><strong>Total Data Keluar (Sesi Ini):</strong> ${formatBytes(parseInt(usageData.bytesOut || 0,10))}</p>
+                                   <small style="display:block; margin-top:10px; color:#777;">(Data penggunaan sesi aktif saat ini)</small></div>`,
+                            icon: 'info', confirmButtonText: 'OK', heightAuto:false
+                        });
+                    } else {
+                        Swal.fire({title:'Info', text: (usageData && usageData.message) || `Gagal memuat data untuk ${selectedUser}, atau user tidak aktif.`, icon: (usageData && usageData.message) ? 'info' : 'error', heightAuto:false});
+                    }
+                }
+            });
+        }
+        
+        async function handleEditHotspotUser(userId) {
+            const userToEdit = (await fetchDataWithAuth(`/hotspot/users/${userId}/details`)) || {};
+            if (!userToEdit.name) { Swal.fire({title:'Error', text:`User ID ${userId} tidak ditemukan.`, icon:'error', heightAuto:false}); return; }
+            
+            if (hotspotProfilesCache.length === 0) await loadHotspotProfiles();
+            let profileOptionsHtmlForEdit = '';
+            hotspotProfilesCache.forEach(p => profileOptionsHtmlForEdit += `<option value="${p.name}" ${p.name === userToEdit.profile ? 'selected' : ''}>${p.name}</option>`);
+
+            const { value: formValues } = await Swal.fire({
+                title: `Edit User Hotspot: ${userToEdit.name}`,
+                html:
+                    `<label class="swal2-label">Username (tidak dapat diubah):</label><input id="swal-hs-user-edit" class="swal2-input" value="${userToEdit.name || ''}" disabled>` +
+                    `<label class="swal2-label">Password (kosongkan jika tidak diubah):</label><input type="password" id="swal-hs-password-edit" class="swal2-input" placeholder="Password baru">` +
+                    `<label class="swal2-label">Profil:</label><select id="swal-hs-profile-edit" class="swal2-select" style="width:100%; padding:0.5em; margin-bottom:1em;">${profileOptionsHtmlForEdit}</select>` +
+                    `<label class="swal2-label">Batas Waktu:</label><input id="swal-hs-timelimit-edit" class="swal2-input" placeholder="mis: 1h30m0s" value="${userToEdit['limit-uptime'] || ''}">` +
+                    `<label class="swal2-label">Batas Kuota:</label><input id="swal-hs-datalimit-edit" class="swal2-input" placeholder="mis: 1G / 500M" value="${formatBytesToMikrotikInput(userToEdit['limit-bytes-total'])}">` +
+                    `<label class="swal2-label">Komentar:</label><input id="swal-hs-comment-edit" class="swal2-input" placeholder="Komentar" value="${userToEdit.comment || ''}">`,
+                focusConfirm: false,
+                didOpen: () => { 
+                    const profileSelect = document.getElementById('swal-hs-profile-edit');
+                    if (profileSelect && userToEdit.profile) profileSelect.value = userToEdit.profile;
+                },
+                preConfirm: () => ({
+                    password: document.getElementById('swal-hs-password-edit').value,
+                    profile: document.getElementById('swal-hs-profile-edit').value,
+                    timeLimit: document.getElementById('swal-hs-timelimit-edit').value.trim(),
+                    dataLimit: document.getElementById('swal-hs-datalimit-edit').value.trim(),
+                    comment: document.getElementById('swal-hs-comment-edit').value.trim(),
+                }),
+                showCancelButton: true, confirmButtonText: 'Simpan', cancelButtonText: 'Batal', heightAuto: false
+            });
+
+            if (formValues) {
+                const updateData = {};
+                if (formValues.password) updateData.password = formValues.password;
+                if (formValues.profile) updateData.profile = formValues.profile;
+                updateData['limit-uptime'] = formValues.timeLimit || (userToEdit['limit-uptime'] === undefined ? '' : '0s');
+                updateData['limit-bytes-total'] = parseMikrotikDataLimit(formValues.dataLimit) || (userToEdit['limit-bytes-total'] === undefined ? '' : '0');
+                updateData.comment = formValues.comment;
+                
+                Object.keys(updateData).forEach(key => (updateData[key] === undefined) && delete updateData[key]);
+
+
+                const result = await fetchDataWithAuth(`/hotspot/users/${userId}`, {
+                    method: 'PUT', body: JSON.stringify(updateData)
+                });
+                if (result && result.success) {
+                    Swal.fire({title:'Berhasil!', text:'User hotspot berhasil diperbarui.', icon:'success', heightAuto:false, timer:1500, showConfirmButton: false});
+                    loadHotspotUsers();
+                }
+            }
+        }
+
+        async function handleRemoveHotspotUser(userId, userName) {
+            const confirmation = await Swal.fire({
+                title: `Hapus User ${userName}?`, text: "User hotspot ini akan dihapus permanen!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal', heightAuto:false
+            });
+            if (confirmation.isConfirmed) {
+                const result = await fetchDataWithAuth(`/hotspot/users/${userId}`, { method: 'DELETE' });
+                if (result && result.success) {
+                    Swal.fire({title:'Dihapus!', text:`User ${userName} berhasil dihapus.`, icon:'success', heightAuto:false, timer:1500, showConfirmButton:false});
+                    loadHotspotUsers();
+                }
+            }
+        }
+        
+        async function handleMakeBindingOrCookie(activeId, typeAction = 'cookie') {
+            const result = await fetchDataWithAuth(`/hotspot/active/${activeId}/make-static`, { method: 'POST', body: JSON.stringify({action: typeAction}) });
+             if (result && result.success) {
+                Swal.fire({title:'Berhasil!', text:`Aksi '${typeAction}' untuk user berhasil: ${result.message || ''}`, icon:'success', heightAuto:false, timer:2000, showConfirmButton:false});
+                loadActiveHotspotUsers();
+            }
+        }
+
+        async function handleDisconnectHotspotUser(activeId) {
+             const confirmation = await Swal.fire({
+                title: `Disconnect User?`, text: "User ini akan diputus koneksinya.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, putuskan!', cancelButtonText: 'Batal', heightAuto:false
+            });
+            if(confirmation.isConfirmed){
+                const result = await fetchDataWithAuth(`/hotspot/active/${activeId}/disconnect`, { method: 'POST' });
+                 if (result && result.success) {
+                    Swal.fire({title:'Berhasil!', text:`User berhasil di-disconnect.`, icon:'success', heightAuto:false, timer:1500, showConfirmButton:false});
+                    loadActiveHotspotUsers();
+                }
+            }
+        }
+
+        function generateAndShowQRCode(username, password) {
+            if (!qrCodeModal || !qrCodeCanvas || !qrCodeModalTitle || !voucherInfoDiv) return;
+            const hotspotLoginAddress = `http://${process.env.MIKROTIK_HOTSPOT_ADDRESS || window.location.hostname}/login`;
+            const qrData = `${hotspotLoginAddress}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password || '')}`;
+            qrCodeModalTitle.textContent = `Voucher Hotspot untuk ${username}`;
+            voucherInfoDiv.innerHTML = `<strong>Username:</strong> ${username}<br><strong>Password:</strong> ${password || '(tidak diset)'}`;
+            try {
+                new QRious({ element: qrCodeCanvas, value: qrData, size: 250, level: 'H' });
+                qrCodeModal.style.display = 'flex';
+            } catch(e) { console.error("Error membuat QR Code:", e); }
+        }
+        if(hotspotUserTableBody){
+            hotspotUserTableBody.addEventListener('click', (event) => {
+                const button = event.target.closest('.action-button-table');
+                if(button){
+                    const userId = button.dataset.userId;
+                    const userName = button.dataset.userName;
+                    if(button.classList.contains('hotspot-user-edit-btn')){
+                        handleEditHotspotUser(userId);
+                    } else if (button.classList.contains('hotspot-user-remove-btn')){
+                        handleRemoveHotspotUser(userId, userName);
+                    }
+                }
+            });
+        }
+        if(hotspotActiveTableBody){
+            hotspotActiveTableBody.addEventListener('click', (event) => {
+                const button = event.target.closest('.action-button-table');
+                if(button){
+                    const activeId = button.dataset.activeId;
+                    if(button.classList.contains('hotspot-active-cookie-btn')){
+                        handleMakeBindingOrCookie(activeId, 'cookie');
+                    } else if (button.classList.contains('hotspot-active-disconnect-btn')){
+                        handleDisconnectHotspotUser(activeId);
+                    }
+                }
+            });
+        }
+        function initializeHotspotPage() {
+            console.log("[HOTSPOT_SCRIPT] Menginisialisasi Halaman Manajemen Hotspot...");
+            setActiveNav();
+            Promise.all([
+                loadHotspotProfiles(),
+                loadHotspotUsers(),
+                loadActiveHotspotUsers()
+            ]).catch(err => console.error("Error saat inisialisasi halaman hotspot (salah satu load gagal):", err));
+        }
+
+        initializeHotspotPage();
+    });
+}
+    </script>
+</body>
+</html>

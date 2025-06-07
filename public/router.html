@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Pengaturan Router</title>
+    <meta name="description" content="Pengaturan Data Router Mikrotik ALINOS.NET">
+    <meta name="author" content="Skydash.NET">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .site-header .header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-title-container { display: flex; align-items: center; }
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+        .site-title h1 { font-size: 1.8em; color: #4a148c; margin: 0; line-height: 1.1; }
+        .site-title h2 { font-size: 0.95em; color: #555; margin: 0; font-weight: 400; }
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover { background-color: #5e35b1; }
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1; 
+            overflow: hidden; 
+        }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex; 
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%; 
+            flex-shrink: 0; 
+        }
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0; 
+        }
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover { background: rgba(255,255,255,0.2); }
+        .sidebar-toggle-button svg { display: block; width: 20px; height: 20px; }
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul { list-style-type: none; }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .mobile-menu-button {
+            display: none; 
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+        .sidebar-nav li a:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
+        .sidebar-nav li a.active { background-color: rgba(255, 255, 255, 0.2); color: #fff; font-weight: 600; }
+        .nav-icon { margin-right: 15px; font-size: 1.3em; width: 24px; text-align: center; flex-shrink: 0; transition: margin 0.3s ease; }
+        .nav-text { opacity: 1; transition: opacity 0.15s 0.1s ease; } 
+        .sidebar.sidebar-minimized { width: 70px; }
+        .sidebar.sidebar-minimized .nav-text { opacity: 0; pointer-events: none; width: 0; }
+        .sidebar.sidebar-minimized .nav-icon { margin-right: 0; }
+        .sidebar.sidebar-minimized .sidebar-header { justify-content: center; padding: 15px 0; }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(180deg); }
+        .sidebar.sidebar-minimized .site-footer-sidebar { display: none; }
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0; 
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .main-content-wrapper {
+            flex-grow: 1;
+            background-color: #f0f2f5;
+            overflow-y: auto; 
+            padding: 25px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-area-flex { display: flex; gap: 25px; }
+        .main-content { flex: 3; display: flex; flex-direction: column; gap: 25px; min-width: 0; }
+        .main-content h2 { color: #4a148c; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ab47bc; }
+        .traffic-charts .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .chart-container {
+            background-color: #ffffff;
+            padding: 15px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            text-align: center;
+            height: 300px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .chart-container canvas { max-width: 100%; display: block; flex-grow: 1; min-height: 0; }
+        .chart-container p { margin-top: 10px; font-weight: 600; color: #4a4a4a; font-size: 0.9em; flex-shrink: 0; }
+        .right-panel { flex: 1; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.07); height: fit-content; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .right-panel-section { background-color: #f9f9f9; padding: 15px; border-radius: 6px; }
+        .right-panel-section h2 { color: #4a148c; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #ce93d8; font-size: 1.1em; }
+        .info-item { margin-bottom: 12px; font-size: 0.95em; line-height: 1.5; }
+        .info-item strong { color: #311b92; display: block; margin-bottom: 3px; font-weight: 600; }
+        .info-item span, .info-item p#deviceUptime { color: #673ab7; font-size: 1.1em; font-weight: bold; word-break: break-all; }
+
+        @media (max-width: 992px) {
+            .content-area-flex { flex-direction: column; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 280px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end; padding: 15px 10px 15px 15px;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            .sidebar.sidebar-minimized + .main-content-wrapper + .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px;}
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px;}
+            .site-title h1 { font-size: 1.2em; }
+            .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+        }
+        .router-input-container {
+            background-color: #ffffff;
+            padding: 35px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px; 
+            margin: 40px auto; 
+            text-align: center;
+        }
+        .router-input-container h2 {
+            color: #4a148c;
+            margin-bottom: 25px;
+            font-size: 2em;
+            font-weight: 600;
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #5e35b1; font-weight: 600; font-size: 0.95em; }
+        .form-group input[type="text"], 
+        .form-group input[type="password"],
+        .form-group input[type="number"] { 
+            width: 100%; padding: 12px 15px; border: 1px solid #d1c4e9;
+            border-radius: 6px; font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="text"]:focus, 
+        .form-group input[type="password"]:focus,
+        .form-group input[type="number"]:focus {
+            border-color: #7e57c2;
+            box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+            outline: none;
+        }
+        .action-button button { 
+            background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+            color: white; border: none; padding: 12px 25px; border-radius: 6px;
+            font-size: 1.1em; font-weight: 600; cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            width: 100%;
+        }
+        .action-button button:hover { background: linear-gradient(135deg, #673ab7 0%, #4a148c 100%); }
+        .action-button button:active { transform: scale(0.98); }
+        form#routerForm br { display: none; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
+                </svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title">
+                    <h1>ALINOS.NET</h1>
+                    <h2>Dashboard Monitor</h2>
+                </div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path>
+                    </svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="router-input-container">
+                <h2>Pengaturan Router Mikrotik</h2>
+                <form id="routerForm">
+                    <div class="form-group">
+                        <label for="mikrotikHost">Alamat IP Mikrotik:</label>
+                        <input type="text" id="mikrotikHost" name="mikrotikHost" placeholder="Contoh: 192.168.88.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mikrotikUser">Username Mikrotik:</label>
+                        <input type="text" id="mikrotikUser" name="mikrotikUser" placeholder="Contoh: admin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mikrotikPassword">Password Mikrotik:</label>
+                        <input type="password" id="mikrotikPassword" name="mikrotikPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="mikrotikPort">Port API Mikrotik:</label>
+                        <input type="number" id="mikrotikPort" name="mikrotikPort" placeholder="Default: 8728" value="8728">
+                    </div>
+                    <div class="form-group action-button">
+                        <button type="submit">Simpan Konfigurasi</button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+
+    <script>
+        const authTokenRouterPage = localStorage.getItem('authToken');
+if (!authTokenRouterPage) {
+    window.location.href = 'login.html';
+} else {
+    document.addEventListener('DOMContentLoaded', function () {
+        const backendPort = 3000;
+        const fetchDataWithAuth = async (endpoint, options = {}) => {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        localStorage.removeItem('authToken');
+                        alert('Sesi tidak ditemukan. Silakan login kembali.');
+                        window.location.href = 'login.html';
+                        return null;
+                    }
+                    const fullUrl = `/api${endpoint}`;
+                    try {
+                        const defaultHeaders = { 'Authorization': `Bearer ${token}` };
+                        if (options.method === 'POST' || options.method === 'PUT') {
+                            defaultHeaders['Content-Type'] = 'application/json';
+                        }
+                        const fetchOptions = { headers: defaultHeaders, ...options };
+                        const response = await fetch(fullUrl, fetchOptions);
+                        if (response.status === 401 || response.status === 403) {
+                            localStorage.removeItem('authToken');
+                            alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
+                            window.location.href = 'login.html';
+                            return null;
+                        }
+                        if (response.status === 204 && (options.method === 'DELETE' || (options.method === 'POST' && !response.headers.get("content-type")?.includes("application/json")) || (options.method === 'PUT' && !response.headers.get("content-type")?.includes("application/json")) )) {
+                            return { success: true };
+                        }
+                        if (!response.ok) {
+                            const errorBody = await response.text();
+                            let errorJsonMessage = errorBody;
+                            try { const parsedError = JSON.parse(errorBody); errorJsonMessage = parsedError.message || errorBody; } catch (e) {}
+                            // Tambahkan prefix log yang lebih spesifik untuk halaman router jika mau
+                            console.error(`[ROUTER_FETCH_ERROR] ${fullUrl} | Status: ${response.status} | Pesan: ${errorJsonMessage}`);
+                            Swal.fire({title:'Error Fetch', text:`Gagal memproses permintaan (${response.status}). Pesan: ${errorJsonMessage}`, icon:'error', heightAuto: false});
+                            return null;
+                        }
+                        const contentType = response.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            return await response.json();
+                        } else {
+                            return { success: true, data: await response.text() }; 
+                        }
+                    } catch (error) {
+                        console.error(`[ROUTER_FETCH_CATCH_ERROR] ${fullUrl}:`, error);
+                        Swal.fire({title:'Error Jaringan', text: error.message || 'Tidak bisa terhubung ke server.', icon:'error', heightAuto: false});
+                        return null;
+                    }
+                };
+        const logoutButton = document.getElementById('logoutButton'); 
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Logout Berhasil!',
+                    text: 'Anda akan diarahkan ke halaman login.',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    heightAuto: false,
+                    didClose: () => {
+                        window.location.href = 'login.html';
+                    }
+                });
+            });
+        }
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            if (sidebar) {
+                sidebar.classList.toggle('sidebar-minimized');
+            }
+        }
+
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        }
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', toggleSidebar);
+        }
+        if (sidebarOverlay && sidebar) {
+             sidebarOverlay.addEventListener('click', () => {
+                if (sidebar.classList.contains('sidebar-minimized')) { 
+                    sidebar.classList.remove('sidebar-minimized');
+                }
+            });
+        }
+        const yearSpanSidebar = document.getElementById('currentYearSidebar');
+        if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+        const routerForm = document.getElementById('routerForm');
+        const mikrotikHostInput = document.getElementById('mikrotikHost');
+        const mikrotikUserInput = document.getElementById('mikrotikUser');
+        const mikrotikPasswordInput = document.getElementById('mikrotikPassword');
+        const mikrotikPortApiInput = document.getElementById('mikrotikPort'); // Sesuai HTML terakhir, ID-nya 'mikrotikPort'
+
+        // --- Fungsi untuk Memuat Konfigurasi Router yang Ada ---
+        async function loadRouterConfig() {
+            console.log("[ROUTER_PAGE] Memuat konfigurasi router...");
+            const config = await fetchDataWithAuth('/router-config'); // GET /api/router-config
+            if (config) {
+                if (config.message && config.message.includes("belum diatur")) {
+                    console.log("[ROUTER_PAGE] Konfigurasi Mikrotik belum diatur untuk user ini.");
+                    // Biarkan form kosong atau dengan placeholder
+                    if(mikrotikHostInput) mikrotikHostInput.placeholder = "Contoh: 192.168.88.1";
+                    if(mikrotikUserInput) mikrotikUserInput.placeholder = "Contoh: admin";
+                    if(mikrotikPortApiInput) mikrotikPortApiInput.value = '8728'; // Default port
+                    return;
+                }
+                console.log("[ROUTER_PAGE] Konfigurasi diterima:", config);
+                if(mikrotikHostInput) mikrotikHostInput.value = config.mikrotik_host || '';
+                if(mikrotikUserInput) mikrotikUserInput.value = config.mikrotik_user || '';
+                if(mikrotikPortApiInput) mikrotikPortApiInput.value = config.mikrotik_port_api || '8728';
+                // Password tidak diisi ulang ke form untuk keamanan
+                if(mikrotikPasswordInput) mikrotikPasswordInput.placeholder = "Isi jika ingin mengubah password";
+            } else {
+                console.log("[ROUTER_PAGE] Tidak ada konfigurasi sebelumnya atau gagal memuat.");
+                // Bisa juga biarkan form kosong atau dengan placeholder
+                if(mikrotikPortApiInput) mikrotikPortApiInput.value = '8728';
+            }
+        }
+
+        // --- Event Listener untuk Form Router ---
+        if (routerForm) {
+            routerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('[ROUTER_FORM_SUBMIT] Form submit dicegah. Memulai proses penyimpanan...');
+                const payload = {
+                    mikrotikHost: mikrotikHostInput.value.trim(),
+                    mikrotikUser: mikrotikUserInput.value.trim(),
+                    mikrotikPassword: mikrotikPasswordInput.value, // Jangan di-trim, bisa jadi ada spasi di password
+                    mikrotikPortApi: parseInt(mikrotikPortApiInput.value.trim()) || 8728
+                };
+
+                if (!payload.mikrotikHost || !payload.mikrotikUser) {
+                    Swal.fire('Error', 'Alamat IP dan Username Mikrotik harus diisi!', 'error', {heightAuto: false});
+                    return;
+                }
+                // Password tidak wajib diisi jika hanya ingin update host/user/port
+                // Jika password dikosongkan, backend akan mempertahankan password lama (jika ada)
+
+                console.log("[ROUTER_PAGE] Mengirim konfigurasi:", payload);
+                const result = await fetchDataWithAuth('/router-config', { // POST /api/router-config
+                    method: 'POST', // Seharusnya POST untuk create, atau PUT untuk update jika ID config sudah ada
+                                     // Kita buat POST yang akan INSERT atau UPDATE (UPSERT)
+                    body: JSON.stringify(payload)
+                });
+                console.log('[ROUTER_FORM_SUBMIT] Respons dari backend setelah POST /api/router-config:', result);
+
+                if (result && result.config) {
+                    Swal.fire('Berhasil!', 'Konfigurasi Mikrotik berhasil disimpan.', 'success', {heightAuto: false});
+                    if(mikrotikPasswordInput) mikrotikPasswordInput.value = ''; // Kosongkan field password setelah simpan
+                    if(mikrotikPasswordInput) mikrotikPasswordInput.placeholder = "Isi jika ingin mengubah password";
+                } else {
+                    console.error('[ROUTER_PAGE_ERROR] Form dengan ID "routerForm" tidak ditemukan!');
+                }
+            });
+        }
+
+        // --- Inisialisasi Halaman Router ---
+        function initializeRouterPage() {
+            console.log("[ROUTER_PAGE] Menginisialisasi Halaman Pengaturan Router...");
+            setActiveNav();
+            loadRouterConfig(); // Muat config saat halaman dibuka
+        }
+
+        initializeRouterPage();
+    });
+}
+    </script> 
+    </body>
+</html>

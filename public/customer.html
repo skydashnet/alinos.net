@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALINOS.NET - Statistik Pelanggan</title>
+    <meta name="description" content="Statistik Pelanggan ALINOS.NET">
+    <meta name="author" content="Skydash.NET">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .site-header {
+            background-color: #ffffff;
+            padding: 0 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .site-header .header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-title-container { display: flex; align-items: center; }
+        .logo-placeholder {
+            background-color: #673ab7;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 20px;
+        }
+        .site-title h1 { font-size: 1.8em; color: #4a148c; margin: 0; line-height: 1.1; }
+        .site-title h2 { font-size: 0.95em; color: #555; margin: 0; font-weight: 400; }
+        .logout-button {
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover { background-color: #5e35b1; }
+        .dashboard-body-wrapper {
+            display: flex;
+            flex-grow: 1; 
+            overflow: hidden; 
+        }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(160deg, #5e35b1 0%, #311b92 100%);
+            color: #ede7f6;
+            display: flex; 
+            flex-direction: column;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%; 
+            flex-shrink: 0; 
+        }
+        .sidebar-header {
+            padding: 15px 10px 15px 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 54px;
+            flex-shrink: 0; 
+        }
+        .sidebar-toggle-button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-toggle-button:hover { background: rgba(255,255,255,0.2); }
+        .sidebar-toggle-button svg { display: block; width: 20px; height: 20px; }
+        .sidebar-nav {
+            padding-top: 10px;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+        .sidebar-nav ul { list-style-type: none; }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: #d1c4e9;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .mobile-menu-button {
+            display: none; 
+            background: none;
+            border: none;
+            color: #4a148c;
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .mobile-menu-button svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+        }
+        .sidebar-nav li a:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; }
+        .nav-icon { margin-right: 15px; font-size: 1.3em; width: 24px; text-align: center; flex-shrink: 0; transition: margin 0.3s ease; }
+        .nav-text { opacity: 1; transition: opacity 0.15s 0.1s ease; } 
+        .sidebar.sidebar-minimized { width: 70px; }
+        .sidebar.sidebar-minimized .nav-text { opacity: 0; pointer-events: none; width: 0; }
+        .sidebar.sidebar-minimized .nav-icon { margin-right: 0; }
+        .sidebar.sidebar-minimized .sidebar-header { justify-content: center; padding: 15px 0; }
+        .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(180deg); }
+        .sidebar.sidebar-minimized .site-footer-sidebar { display: none; }
+        .site-footer-sidebar {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #b0aac0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0; 
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .main-content-wrapper {
+            flex-grow: 1;
+            background-color: #f0f2f5;
+            overflow-y: auto; 
+            padding: 25px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-area-flex { display: flex; gap: 25px; }
+        .main-content { flex: 3; display: flex; flex-direction: column; gap: 25px; min-width: 0; }
+        .main-content h2 { color: #4a148c; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #ab47bc; }
+
+        @media (max-width: 992px) {
+            .content-area-flex { flex-direction: column; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 280px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -260px; z-index: 1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            .sidebar.sidebar-minimized { left: 0; width: 260px; } 
+            .sidebar.sidebar-minimized .nav-text { opacity: 1; width: auto; } 
+            .sidebar.sidebar-minimized .nav-icon { margin-right: 15px; }
+            .sidebar.sidebar-minimized .sidebar-header { justify-content: flex-end; padding: 15px 10px 15px 15px;}
+            .sidebar.sidebar-minimized .sidebar-toggle-button svg { transform: rotate(0deg); } 
+            .sidebar.sidebar-minimized .site-footer-sidebar { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; }
+            .sidebar.sidebar-minimized + .main-content-wrapper + .sidebar-overlay { display: block; }
+            .site-header { height: 70px; padding: 0 15px;}
+            .logo-placeholder { padding: 10px 12px; font-size: 1.2em; margin-right: 10px;}
+            .site-title h1 { font-size: 1.2em; }
+            .site-title h2 { font-size: 0.8em; }
+            .logout-button { padding: 8px 12px; font-size: 0.8em; }
+            .traffic-charts .charts-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; }
+            .mobile-menu-button { display: block; }
+            .sidebar-toggle-button { display: none; }
+        }
+        .main-content-wrapper {
+            padding: 25px;
+        }
+        .customer-stats-container {
+            display: flex;
+            gap: 25px;
+        }
+        .customer-table-section {
+            flex: 2; 
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
+        .customer-table-section h2 {
+            color: #4a148c; 
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ab47bc; 
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto; 
+            position: relative; 
+        }
+        table.customer-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        table.customer-table th, table.customer-table td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        table.customer-table th {
+            background-color: #f4f0f8;
+            color: #4a148c;
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+            border: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        table.customer-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        table.customer-table tbody tr:hover {
+            background-color: #efefef; 
+        }
+        th.sortable-header {
+            cursor: pointer;
+            position: relative; 
+        }
+        th.sortable-header:hover {
+            background-color: #e8e0f0; 
+        }
+        th.sortable-header .sort-indicator::after {
+            content: '';
+            margin-left: 5px;
+            font-size: 0.8em;
+            display: inline-block;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+        }
+        th.sortable-header.sort-asc .sort-indicator::after {
+            content: ''; 
+            border-bottom: 5px solid #4a148c; 
+            border-top: 0;
+        }
+        th.sortable-header.sort-desc .sort-indicator::after {
+            content: '';
+            border-top: 5px solid #4a148c; 
+            border-bottom: 0;
+        }
+        .customer-info-panels {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .info-panel {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
+        .info-panel h3 {
+            color: #4a148c;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #d1c4e9;
+            font-size: 1.2em;
+        }
+        .log-entries {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 0.85em;
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .log-entries p {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #eee;
+        }
+        .log-entries p:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .overview-item {
+            margin-bottom: 10px;
+        }
+        .overview-item strong {
+            color: #5e35b1; 
+        }
+        .overview-item span {
+            font-weight: bold;
+            color: #333;
+        }
+        .inactive-user-list {
+            list-style-type: none;
+            padding-left: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+        .inactive-user-list li {
+            padding: 4px 0;
+        }
+        @media (max-width: 1024px) { 
+            .customer-stats-container {
+                flex-direction: column;
+            }
+            .customer-table-section, .customer-info-panels {
+                flex: none; 
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <button id="mobileMenuBtn" class="mobile-menu-button">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
+                </svg>
+            </button>
+            <div class="logo-title-container">
+                <div class="logo-placeholder">AL</div>
+                <div class="site-title">
+                    <h1>ALINOS.NET</h1>
+                    <h2>Dashboard Monitor</h2>
+                </div>
+            </div>
+            <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-body-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-button" title="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zM3 7c0 .55.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1z"></path>
+                    </svg>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard.html"><span class="nav-icon">🏠</span> <span class="nav-text">Home</span></a></li>
+                    <li><a href="/customer.html"><span class="nav-icon">👥</span> <span class="nav-text">Pelanggan</span></a></li>
+                    <li><a href="/hotspot.html"><span class="nav-icon">📡</span> <span class="nav-text">Hotspot</span></a></li>
+                    <li><a href="/odp_odc.html"><span class="nav-icon">🗺️</span> <span class="nav-text">ODP/ODC</span></a></li>
+                    <li><a href="/management.html"><span class="nav-icon">⚙️</span> <span class="nav-text">Management</span></a></li>
+                    <li><a href="/router.html"><span class="nav-icon">🧱</span> <span class="nav-text">Mikrotik</span></a></li>
+                    <li><a href="/settings.html" class="active"><span class="nav-icon">🔧</span> <span class="nav-text">Pengaturan Akun</span></a></li>
+                </ul>
+            </nav>
+            <footer class="site-footer-sidebar">
+                <p>&copy; <span id="currentYearSidebar"></span> ALINOS.NET</p>
+            </footer>
+        </aside>
+
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="customer-stats-container">
+                <section class="customer-table-section">
+                    <h2>Statistik Pelanggan</h2>
+                    <div class="table-wrapper">
+                        <table class="customer-table" id="customerTable">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th class="sortable-header" data-sort-by="name">Nama Pelanggan <span class="sort-indicator"></span></th>
+                                    <th class="sortable-header" data-sort-by="profile">Secrets Profil <span class="sort-indicator"></span></th>
+                                    <th class="sortable-header" data-sort-by="comment">Komentar <span class="sort-indicator"></span></th>
+                                    <th class="sortable-header" data-sort-by="last-logged-out">Last Logged Out <span class="sort-indicator"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <tr>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td></td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <aside class="customer-info-panels">
+                    <div class="info-panel">
+                        <h3>Log Information</h3>
+                        <div class="log-entries" id="pppoeLogEntries">
+                            <p>-</p>
+                            <p>-</p>
+                            <p>-</p>
+                            </div>
+                    </div>
+                    <div class="info-panel">
+                        <h3>Overview Pelanggan</h3>
+                        <div class="overview-item">
+                            <strong>Pelanggan Aktif:</strong>
+                            <span id="pelangganAktifCount">25</span>
+                        </div>
+                        <div class="overview-item">
+                            <strong>Pelanggan Non Aktif:</strong>
+                            <span id="pelangganNonAktifCount">10</span>
+                        </div>
+                        <h4>Detail Pelanggan Non Aktif:</h4>
+                        <ul class="inactive-user-list" id="inactiveUserList">
+                            <li>UserNonAktif1 (ProfileX)</li>
+                            <li>UserNonAktif2 (ProfileY)</li>
+                            </ul>
+                    </div>
+                </aside>
+            </div>
+            <footer class="site-footer-main" style="background: none; border-top: none; padding-top: 0;">
+                </footer>
+        </div>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+    <script>
+        const authTokenStatsPage = localStorage.getItem('authToken');
+            if (!authTokenStatsPage) {
+                alert('Anda harus login terlebih dahulu!');
+                window.location.href = 'login.html';
+            } else {
+                document.addEventListener('DOMContentLoaded', function () {
+                const backendPort = 3000; 
+                let pppoeLogIntervalId = null;
+            const fetchDataWithAuth = async (endpoint) => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                localStorage.removeItem('authToken');
+                alert('Sesi tidak ditemukan. Silakan login kembali.');
+                window.location.href = 'login.html';
+                return null;
+            }
+            const fullUrl = `/api${endpoint}`;
+            try {
+                const response = await fetch(fullUrl, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('authToken');
+                    alert('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                if (!response.ok) {
+                    console.error(`[STATS_FETCH] Error fetching ${fullUrl}: ${response.status} ${response.statusText}`);
+                    const errorBody = await response.text();
+                    console.error(`[STATS_FETCH] Error body: ${errorBody}`);
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`[STATS_FETCH] Catch error fetching ${fullUrl}:`, error);
+                return null;
+            }
+        };
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                if (pppoeLogIntervalId) clearInterval(pppoeLogIntervalId); 
+                Swal.fire({
+                    icon: 'success', title: 'Logout Berhasil!', text: 'Anda akan diarahkan ke halaman login.',
+                    timer: 2000, showConfirmButton: false, timerProgressBar: true,
+                    didClose: () => { window.location.href = 'login.html'; },
+                    heightAuto: false
+                });
+            });
+        }
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            if (sidebar) sidebar.classList.toggle('sidebar-minimized');
+        }
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (sidebarOverlay && sidebar) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('sidebar-minimized');
+            });
+        }
+
+        const yearSpanSidebar = document.getElementById('currentYearSidebar');
+        if(yearSpanSidebar) yearSpanSidebar.textContent = new Date().getFullYear();
+
+        function setActiveNav() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar-nav ul li a');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                const linkHref = link.getAttribute('href');
+                if (link.pathname === currentPath || linkHref === currentPath.substring(1) || (linkHref === 'customer.html' && currentPath.includes('customer.html'))) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        let allSecretsData = [];
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+
+        function renderCustomerTable(dataToRender) {
+            const tableBody = document.getElementById('customerTableBody');
+            if (!tableBody) return;
+            tableBody.innerHTML = ''; 
+            if (dataToRender && Array.isArray(dataToRender)) {
+                if (dataToRender.length === 0) {
+                    const row = tableBody.insertRow(); const cell = row.insertCell();
+                    cell.colSpan = 5; cell.textContent = 'Tidak ada data secret PPPoE.'; cell.style.textAlign = 'center';
+                    return;
+                }
+                dataToRender.forEach((secret, index) => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = index + 1;
+                    row.insertCell().textContent = secret.name || '-';
+                    row.insertCell().textContent = secret.profile || '-';
+                    row.insertCell().textContent = secret.comment || '-';
+                    row.insertCell().textContent = secret['last-logged-out'] || (secret.disabled === 'true' ? 'Disabled' : '-');
+                });
+            } else {
+                const row = tableBody.insertRow(); const cell = row.insertCell();
+                cell.colSpan = 5; cell.textContent = 'Gagal memuat data secret.'; cell.style.textAlign = 'center';
+            }
+        }
+        
+        function updateSortIndicators(clickedHeaderElement) {
+            document.querySelectorAll('th.sortable-header').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            if (clickedHeaderElement) {
+                clickedHeaderElement.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        }
+        
+        function sortData(columnKey) {
+            if (currentSortColumn === columnKey) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = columnKey;
+                currentSortDirection = 'asc';
+            }
+            const sortedData = [...allSecretsData].sort((a, b) => {
+                let valA = a[columnKey] === undefined || a[columnKey] === null ? '' : a[columnKey];
+                let valB = b[columnKey] === undefined || b[columnKey] === null ? '' : b[columnKey];
+                valA = String(valA).toLowerCase(); valB = String(valB).toLowerCase();
+                let comparison = 0;
+                if (valA > valB) comparison = 1;
+                else if (valA < valB) comparison = -1;
+                return currentSortDirection === 'asc' ? comparison : comparison * -1;
+            });
+            renderCustomerTable(sortedData);
+            const clickedHeaderElement = document.querySelector(`th[data-sort-by="${columnKey}"]`);
+            updateSortIndicators(clickedHeaderElement);
+        }
+        async function loadCustomerTableAndSetupSorting() {
+            const secretsData = await fetchDataWithAuth('/pppoe/secrets');
+            if (secretsData && Array.isArray(secretsData)) {
+                allSecretsData = secretsData; 
+                renderCustomerTable(allSecretsData);
+                document.querySelectorAll('th.sortable-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        const columnKey = this.dataset.sortBy;
+                        if (columnKey) sortData(columnKey);
+                    });
+                });
+                updateSortIndicators(null);
+            } else {
+                renderCustomerTable(null); 
+            }
+        }
+        const pppoeLogEntriesDiv = document.getElementById('pppoeLogEntries');
+        async function loadPppoeLogs() {
+            if (!pppoeLogEntriesDiv) return;
+            const logData = await fetchDataWithAuth('/mikrotik/log/pppoe'); 
+            const shouldScrollToBottom = pppoeLogEntriesDiv.scrollTop + pppoeLogEntriesDiv.clientHeight >= pppoeLogEntriesDiv.scrollHeight - 20;
+            pppoeLogEntriesDiv.innerHTML = ''; 
+            if (logData && Array.isArray(logData)) {
+                if (logData.length === 0) {
+                    const p = document.createElement('p'); p.textContent = 'Tidak ada log PPPoE terbaru.';
+                    pppoeLogEntriesDiv.appendChild(p); return;
+                }
+                logData.forEach(logEntry => {
+                    const p = document.createElement('p');
+                    p.textContent = `[${logEntry.time || 'Tanpa Waktu'}] ${logEntry.message || 'Tidak ada pesan'}`; 
+                    pppoeLogEntriesDiv.appendChild(p);
+                });
+                if (shouldScrollToBottom) pppoeLogEntriesDiv.scrollTop = pppoeLogEntriesDiv.scrollHeight;
+            } else {
+                const p = document.createElement('p'); p.textContent = 'Gagal memuat log atau tidak ada log.';
+                pppoeLogEntriesDiv.appendChild(p);
+            }
+        }
+        async function loadCustomerOverview() {
+            const aktifCountEl = document.getElementById('pelangganAktifCount');
+            const nonAktifCountEl = document.getElementById('pelangganNonAktifCount');
+            const inactiveUserListEl = document.getElementById('inactiveUserList');
+
+            if (!aktifCountEl || !nonAktifCountEl || !inactiveUserListEl) {
+                console.warn("[STATS_PAGE] Satu atau lebih elemen overview pelanggan tidak ditemukan.");
+                return;
+            }
+
+            // Mengosongkan daftar detail terlebih dahulu
+            inactiveUserListEl.innerHTML = '<li>Memuat...</li>';
+
+            try {
+                // 1. Ambil data JUMLAH secara bersamaan
+                const [pelangganOnData, pelangganOffCountData] = await Promise.all([
+                    fetchDataWithAuth('/mikrotik/pelanggan/on'),
+                    fetchDataWithAuth('/pppoe/off/count')
+                ]);
+
+                // Tampilkan jumlahnya
+                aktifCountEl.textContent = (pelangganOnData && typeof pelangganOnData.count !== 'undefined') ? pelangganOnData.count : '0';
+                nonAktifCountEl.textContent = (pelangganOffCountData && typeof pelangganOffCountData.count !== 'undefined') ? pelangganOffCountData.count : '0';
+
+                // 2. Ambil data DETAIL pelanggan non-aktif (panggil endpoint /off/details)
+                const pelangganOffDetailsData = await fetchDataWithAuth('/pppoe/off/details');
+
+                // Kosongkan lagi sebelum diisi
+                inactiveUserListEl.innerHTML = ''; 
+                
+                // 3. Render daftar detail
+                if (pelangganOffDetailsData && Array.isArray(pelangganOffDetailsData)) {
+                    if (pelangganOffDetailsData.length === 0) {
+                        inactiveUserListEl.innerHTML = '<li>Tidak ada pelanggan non-aktif ditemukan.</li>';
+                    } else {
+                        pelangganOffDetailsData.forEach(user => {
+                            const li = document.createElement('li');
+                            // Di sini kita menggunakan properti 'name' dari pppoe secret
+                            let userInfo = `${user.name || 'Tanpa Nama'}`; 
+                            if (user.comment && user.comment !== '-') { 
+                                userInfo += ` - ${user.comment}`;
+                            }
+                            li.textContent = userInfo;
+                            inactiveUserListEl.appendChild(li);
+                        });
+                    }
+                } else {
+                    throw new Error("Format data detail pelanggan non-aktif tidak valid.");
+                }
+            } catch (error) {
+                console.error("Error saat memuat overview pelanggan:", error);
+                inactiveUserListEl.innerHTML = '<li>Gagal memuat detail pelanggan non-aktif.</li>';
+            }
+        }
+        function initializeStatistikPage() {
+            console.log("Menginisialisasi Halaman Statistik Pelanggan...");
+            setActiveNav();
+            loadCustomerTableAndSetupSorting();
+            loadCustomerOverview();
+        }
+        initializeStatistikPage();
+        window.addEventListener('beforeunload', () => {
+            if (pppoeLogIntervalId) {
+                clearInterval(pppoeLogIntervalId);
+                console.log("Interval refresh log PPPoE dihentikan.");
+            }
+        });
+    });
+}
+    </script> 
+</body>
+</html>
